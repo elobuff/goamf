@@ -2,6 +2,7 @@ package amf
 
 import (
 	"bytes"
+	"encoding/binary"
 	"testing"
 )
 
@@ -113,5 +114,59 @@ func TestEncodeAmf0Null(t *testing.T) {
 	}
 	if bytes.Compare(buf.Bytes(), expect) != 0 {
 		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}
+
+func TestEncodeAmf0LongString(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	testBytes := []byte("12345678")
+
+	tbuf := new(bytes.Buffer)
+	for i := 0; i < 65536; i++ {
+		tbuf.Write(testBytes)
+	}
+
+	enc := new(Encoder)
+
+	_, err := enc.EncodeAmf0(buf, string(tbuf.Bytes()))
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	mbuf := make([]byte, 1)
+	_, err = buf.Read(mbuf)
+	if err != nil {
+		t.Errorf("error reading header")
+	}
+
+	if mbuf[0] != 0x0c {
+		t.Errorf("marker mismatch")
+	}
+
+	var length uint32
+	err = binary.Read(buf, binary.BigEndian, &length)
+	if err != nil {
+		t.Errorf("error reading buffer")
+	}
+	if length != (65536 * 8) {
+		t.Errorf("expected length to be %d, got %d", (65536 * 8), length)
+	}
+
+	tmpBuf := make([]byte, 8)
+	counter := 0
+	for buf.Len() > 0 {
+		n, err := buf.Read(tmpBuf)
+		if err != nil {
+			t.Fatalf("test long string result check, read data(%d) error: %s, n: %d", counter, err, n)
+		}
+		if n != 8 {
+			t.Fatalf("test long string result check, read data(%d) n: %d", counter, n)
+		}
+		if !bytes.Equal(testBytes, tmpBuf) {
+			t.Fatalf("test long string result check, read data % x", tmpBuf)
+		}
+
+		counter++
 	}
 }

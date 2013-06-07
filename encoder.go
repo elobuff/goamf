@@ -31,7 +31,12 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 
 	switch v.Kind() {
 	case reflect.String:
-		return e.EncodeAmf0String(w, v.String(), true)
+		str := v.String()
+		if len(str) <= AMF0_STRING_MAX {
+			return e.EncodeAmf0String(w, str, true)
+		} else {
+			return e.EncodeAmf0LongString(w, str, true)
+		}
 	case reflect.Bool:
 		return e.EncodeAmf0Boolean(w, v.Bool(), true)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:

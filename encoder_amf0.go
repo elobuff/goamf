@@ -70,15 +70,12 @@ func (e *Encoder) EncodeAmf0String(w io.Writer, val string, encodeMarker bool) (
 	}
 
 	var m int
-	l := len(val)
-	buf := make([]byte, 2)
-	binary.BigEndian.PutUint16(buf, uint16(l))
-
-	m, err = w.Write(buf)
+	length := uint16(len(val))
+	err = binary.Write(w, binary.BigEndian, length)
 	if err != nil {
 		return
 	}
-	n += m
+	n += 2
 
 	m, err = w.Write([]byte(val))
 	if err != nil {
@@ -136,6 +133,61 @@ func (e *Encoder) EncodeAmf0Object(w io.Writer, val Object, encodeMarker bool) (
 func (e *Encoder) EncodeAmf0Null(w io.Writer, encodeMarker bool) (n int, err error) {
 	if encodeMarker {
 		if err = WriteMarker(w, AMF0_NULL_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	return
+}
+
+// marker: 1 byte 0x06
+// no additional data
+func (e *Encoder) EncodeAmf0Undefined(w io.Writer, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF0_UNDEFINED_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	return
+}
+
+// marker: 1 byte 0x0c
+// format:
+// - 4 byte big endian uint32 header to determine size
+// - n (size) byte utf8 string
+func (e *Encoder) EncodeAmf0LongString(w io.Writer, val string, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF0_LONG_STRING_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+	length := uint32(len(val))
+	err = binary.Write(w, binary.BigEndian, length)
+	if err != nil {
+		return n, Error("encode amf0: unable to encode long string length: %s", err)
+	}
+	n += 4
+
+	m, err = w.Write([]byte(val))
+	if err != nil {
+		return
+	}
+	n += m
+
+	return
+}
+
+// marker: 1 byte 0x0d
+// no additional data
+func (e *Encoder) EncodeAmf0Unsupported(w io.Writer, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF0_UNSUPPORTED_MARKER); err != nil {
 			return
 		}
 		n += 1
