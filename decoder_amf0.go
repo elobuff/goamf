@@ -151,7 +151,7 @@ func (d *Decoder) DecodeAmf0Reference(r io.Reader, x bool) (interface{}, error) 
 // - normal object format:
 //   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
-func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
+func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (EcmaArray, error) {
 	if err := AssertMarker(r, x, AMF0_ECMA_ARRAY_MARKER); err != nil {
 		return nil, err
 	}
@@ -163,10 +163,12 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
 
 	l := binary.BigEndian.Uint32(bytes)
 
-	result, err := d.DecodeAmf0Object(r, false)
+	obj, err := d.DecodeAmf0Object(r, false)
 	if err != nil {
 		return nil, Error("decode amf0: unable to decode ecma array object: %s", err)
 	}
+
+	result := EcmaArray(obj)
 
 	if int(l) != len(result) {
 		return nil, Error("decode amf0: ecma array has unexpected length %d (expected %d)", len(result), l)
@@ -179,7 +181,7 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
 // format:
 // - 4 byte big endian uint32 to determine length of associative array
 // - n (length) encoded values
-func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (Array, error) {
+func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (StrictArray, error) {
 	if err := AssertMarker(r, x, AMF0_STRICT_ARRAY_MARKER); err != nil {
 		return nil, err
 	}
@@ -192,7 +194,7 @@ func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (Array, error) {
 
 	l := binary.BigEndian.Uint32(bytes)
 
-	result := make(Array, l)
+	result := make(StrictArray, l)
 	d.refCache = append(d.refCache, result)
 
 	for i := uint32(0); i < l; i++ {

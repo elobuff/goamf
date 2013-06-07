@@ -50,8 +50,8 @@ const (
 
 type Version uint8
 
-type Array []interface{}
-
+type StrictArray []interface{}
+type EcmaArray map[string]interface{}
 type Object map[string]interface{}
 
 type TypedObject struct {

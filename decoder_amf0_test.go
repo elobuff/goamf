@@ -276,9 +276,9 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok := got.(Object)
+	obj, ok := got.(EcmaArray)
 	if ok != true {
-		t.Errorf("expected result to cast to object")
+		t.Errorf("expected result to cast to ecma array")
 	}
 	if obj["foo"] != "bar" {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
@@ -290,9 +290,9 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok = got.(Object)
+	obj, ok = got.(EcmaArray)
 	if ok != true {
-		t.Errorf("expected result to cast to object")
+		t.Errorf("expected result to cast to ecma array")
 	}
 	if obj["foo"] != "bar" {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
@@ -304,9 +304,9 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok = got.(Object)
+	obj, ok = got.(EcmaArray)
 	if ok != true {
-		t.Errorf("expected result to cast to object")
+		t.Errorf("expected result to cast to ecma array")
 	}
 	if obj["foo"] != "bar" {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
@@ -323,9 +323,9 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok := got.(Array)
+	arr, ok := got.(StrictArray)
 	if ok != true {
-		t.Errorf("expected result to cast to array")
+		t.Errorf("expected result to cast to strict array")
 	}
 	if arr[0] != float64(5) {
 		t.Errorf("expected array[0] to be 5, got %v", arr[0])
@@ -343,9 +343,9 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok = got.(Array)
+	arr, ok = got.(StrictArray)
 	if ok != true {
-		t.Errorf("expected result to cast to array")
+		t.Errorf("expected result to cast to strict array")
 	}
 	if arr[0] != float64(5) {
 		t.Errorf("expected array[0] to be 5, got %v", arr[0])
@@ -363,9 +363,9 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok = got.(Array)
+	arr, ok = got.(StrictArray)
 	if ok != true {
-		t.Errorf("expected result to cast to array")
+		t.Errorf("expected result to cast to strict array")
 	}
 	if arr[0] != float64(5) {
 		t.Errorf("expected array[0] to be 5, got %v", arr[0])
