@@ -113,6 +113,13 @@ func (d *Decoder) DecodeAmf0Null(r io.Reader, x bool) (result interface{}, err e
 	return
 }
 
+// marker: 1 byte 0x06
+// no additional data
+func (d *Decoder) DecodeAmf0Undefined(r io.Reader, x bool) (result interface{}, err error) {
+	err = AssertMarker(r, x, AMF0_UNDEFINED_MARKER)
+	return
+}
+
 // marker: 1 byte 0x0c
 // format:
 // - 4 byte big endian uint32 header to determine size

@@ -44,7 +44,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_NULL_MARKER:
 		return d.DecodeAmf0Null(r, false)
 	case AMF0_UNDEFINED_MARKER:
-		return nil, Error("decode amf0: unsupported type undefined")
+		return d.DecodeAmf0Undefined(r, false)
 	case AMF0_REFERENCE_MARKER:
 		return nil, Error("decode amf0: unsupported type reference")
 	case AMF0_ECMA_ARRAY_MARKER:
