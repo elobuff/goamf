@@ -454,3 +454,77 @@ func TestDecodeAmf0Unsupported(t *testing.T) {
 		t.Errorf("expect nil got %v", got)
 	}
 }
+
+func TestDecodeAmf0TypedObject(t *testing.T) {
+
+	buf := bytes.NewReader([]byte{
+		0x10, 0x00, 0x0F, 'o', 'r', 'g',
+		'.', 'a', 'm', 'f', '.', 'A',
+		'S', 'C', 'l', 'a', 's', 's',
+		0x00, 0x03, 'b', 'a', 'z', 0x05,
+		0x00, 0x03, 'f', 'o', 'o', 0x02,
+		0x00, 0x03, 'b', 'a', 'r', 0x00,
+		0x00, 0x09,
+	})
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	tobj, ok := got.(*TypedObject)
+	if ok != true {
+		t.Errorf("expected result to cast to typed object, got %+v", tobj)
+	}
+	if tobj.Type != "org.amf.ASClass" {
+		t.Errorf("expected typed object type to be 'class', got %v", tobj.Type)
+	}
+	if tobj.Object["foo"] != "bar" {
+		t.Errorf("expected typed object object foo to eql bar, got %v", tobj.Object["foo"])
+	}
+	if tobj.Object["baz"] != nil {
+		t.Errorf("expected typed object object baz to nil, got %v", tobj.Object["baz"])
+	}
+
+	// Test typed object interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0TypedObject(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	tobj, ok = got.(*TypedObject)
+	if ok != true {
+		t.Errorf("expected result to cast to typed object, got %+v", tobj)
+	}
+	if tobj.Type != "org.amf.ASClass" {
+		t.Errorf("expected typed object type to be 'class', got %v", tobj.Type)
+	}
+	if tobj.Object["foo"] != "bar" {
+		t.Errorf("expected typed object object foo to eql bar, got %v", tobj.Object["foo"])
+	}
+	if tobj.Object["baz"] != nil {
+		t.Errorf("expected typed object object baz to nil, got %v", tobj.Object["baz"])
+	}
+
+	// Test typed object interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0TypedObject(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	tobj, ok = got.(*TypedObject)
+	if ok != true {
+		t.Errorf("expected result to cast to typed object, got %+v", tobj)
+	}
+	if tobj.Type != "org.amf.ASClass" {
+		t.Errorf("expected typed object type to be 'class', got %v", tobj.Type)
+	}
+	if tobj.Object["foo"] != "bar" {
+		t.Errorf("expected typed object object foo to eql bar, got %v", tobj.Object["foo"])
+	}
+	if tobj.Object["baz"] != nil {
+		t.Errorf("expected typed object object baz to nil, got %v", tobj.Object["baz"])
+	}
+}

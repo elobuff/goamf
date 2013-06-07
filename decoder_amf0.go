@@ -71,7 +71,7 @@ func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err erro
 
 // marker: 1 byte 0x03
 // format:
-// - encoded string followed by encoded value
+// - loop encoded string followed by encoded value
 // - terminated with empty string followed by 1 byte 0x09
 func (d *Decoder) DecodeAmf0Object(r io.Reader, x bool) (Object, error) {
 	if err := AssertMarker(r, x, AMF0_OBJECT_MARKER); err != nil {
@@ -124,7 +124,7 @@ func (d *Decoder) DecodeAmf0Undefined(r io.Reader, x bool) (result interface{}, 
 // format:
 // - 4 byte big endian uint32 with length of associative array
 // - normal object format:
-//   - encoded string followed by encoded value
+//   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
 func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
 	if err := AssertMarker(r, x, AMF0_ECMA_ARRAY_MARKER); err != nil {
@@ -231,4 +231,32 @@ func (d *Decoder) DecodeAmf0LongString(r io.Reader, x bool) (result string, err 
 func (d *Decoder) DecodeAmf0Unsupported(r io.Reader, x bool) (result interface{}, err error) {
 	err = AssertMarker(r, x, AMF0_UNSUPPORTED_MARKER)
 	return
+}
+
+// marker: 1 byte 0x10
+// format:
+// - normal string format:
+//   - 2 byte big endian uint16 header to determine size
+//   - n (size) byte utf8 string
+// - normal object format:
+//   - loop encoded string followed by encoded value
+//   - terminated with empty string followed by 1 byte 0x09
+func (d *Decoder) DecodeAmf0TypedObject(r io.Reader, x bool) (*TypedObject, error) {
+	result := &TypedObject{}
+	err := AssertMarker(r, x, AMF0_TYPED_OBJECT_MARKER)
+	if err != nil {
+		return result, err
+	}
+
+	result.Type, err = d.DecodeAmf0String(r, false)
+	if err != nil {
+		return result, Error("decode amf0: typed object unable to determine type: %s", err)
+	}
+
+	result.Object, err = d.DecodeAmf0Object(r, false)
+	if err != nil {
+		return result, Error("decode amf0: typed object unable to determine object: %s", err)
+	}
+
+	return result, nil
 }
