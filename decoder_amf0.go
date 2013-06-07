@@ -84,3 +84,8 @@ func (d *Decoder) DecodeAmf0LongString(r io.Reader, x bool) (result string, err 
 
 	return string(bytes), nil
 }
+
+func (d *Decoder) DecodeAmf0Unsupported(r io.Reader, x bool) (result interface{}, err error) {
+	err = AssertMarker(r, x, AMF0_UNSUPPORTED_MARKER)
+	return
+}

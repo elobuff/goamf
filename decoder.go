@@ -56,7 +56,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_LONG_STRING_MARKER:
 		return d.DecodeAmf0LongString(r, false)
 	case AMF0_UNSUPPORTED_MARKER:
-		return nil, Error("decode amf0: unsupported type unsupported")
+		return d.DecodeAmf0Unsupported(r, false)
 	case AMF0_RECORDSET_MARKER:
 		return nil, Error("decode amf0: unsupported type recordset")
 	case AMF0_XML_DOCUMENT_MARKER:
