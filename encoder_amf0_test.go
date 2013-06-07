@@ -59,6 +59,45 @@ func TestEncodeAmf0BooleanFalse(t *testing.T) {
 	}
 }
 
+func TestEncodeAmf0String(t *testing.T) {
+	buf := new(bytes.Buffer)
+	expect := []byte{0x02, 0x00, 0x03, 0x66, 0x6f, 0x6f}
+
+	enc := new(Encoder)
+
+	n, err := enc.EncodeAmf0(buf, "foo")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if n != 6 {
+		t.Errorf("expected to write 6 bytes, actual %d", n)
+	}
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}
+
+func TestEncodeAmf0Object(t *testing.T) {
+	buf := new(bytes.Buffer)
+	expect := []byte{0x03, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x02, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x09}
+
+	enc := new(Encoder)
+
+	obj := make(Object)
+	obj["foo"] = "bar"
+
+	n, err := enc.EncodeAmf0(buf, obj)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if n != 15 {
+		t.Errorf("expected to write 15 bytes, actual %d", n)
+	}
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}
+
 func TestEncodeAmf0Null(t *testing.T) {
 	buf := new(bytes.Buffer)
 	expect := []byte{0x05}

@@ -31,8 +31,7 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 
 	switch v.Kind() {
 	case reflect.String:
-		return 0, Error("encode amf0: unsupported type string")
-		// return e.EncodeAmf0String(w, v.(string), true)
+		return e.EncodeAmf0String(w, v.String(), true)
 	case reflect.Bool:
 		return e.EncodeAmf0Boolean(w, v.Bool(), true)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -44,24 +43,14 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 	case reflect.Array, reflect.Slice:
 		return 0, Error("encode amf0: unsupported type array")
 	case reflect.Map:
-		return 0, Error("encode amf0: unsupported type map")
+		obj, ok := val.(Object)
+		if ok != true {
+			return 0, Error("encode amf0: unable to create object from map")
+		}
+		return e.EncodeAmf0Object(w, obj, true)
 	}
 
-	var ok bool
-
-	if _, ok = val.(StrictArray); ok {
-		return 0, Error("encode amf0: unsupported type array")
-	}
-
-	if _, ok = val.(EcmaArray); ok {
-		return 0, Error("encode amf0: unsupported type array")
-	}
-
-	if _, ok = val.(Object); ok {
-		return 0, Error("encode amf0: unsupported type object")
-	}
-
-	if _, ok = val.(TypedObject); ok {
+	if _, ok := val.(TypedObject); ok {
 		return 0, Error("encode amf0: unsupported type typed object")
 	}
 
