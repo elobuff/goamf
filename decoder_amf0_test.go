@@ -455,6 +455,42 @@ func TestDecodeAmf0Unsupported(t *testing.T) {
 	}
 }
 
+func TestDecodeAmf0XmlDocument(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x0f, 0x00, 0x00, 0x00, 0x03, 0x66, 0x6f, 0x6f})
+	expect := "foo"
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+
+	// Test long string interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0XmlDocument(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+
+	// Test long string interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0XmlDocument(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}
+
 func TestDecodeAmf0TypedObject(t *testing.T) {
 
 	buf := bytes.NewReader([]byte{

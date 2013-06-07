@@ -233,6 +233,19 @@ func (d *Decoder) DecodeAmf0Unsupported(r io.Reader, x bool) (result interface{}
 	return
 }
 
+// marker: 1 byte 0x0f
+// format:
+// - normal long string format
+//   - 4 byte big endian uint32 header to determine size
+//   - n (size) byte utf8 string
+func (d *Decoder) DecodeAmf0XmlDocument(r io.Reader, x bool) (result string, err error) {
+	if err = AssertMarker(r, x, AMF0_XML_DOCUMENT_MARKER); err != nil {
+		return
+	}
+
+	return d.DecodeAmf0LongString(r, false)
+}
+
 // marker: 1 byte 0x10
 // format:
 // - normal string format:
