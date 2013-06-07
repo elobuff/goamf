@@ -6,6 +6,8 @@ import (
 	"math"
 )
 
+// marker: 1 byte 0x00
+// format: 8 byte big endian float64
 func (d *Decoder) DecodeAmf0Number(r io.Reader, x bool) (result float64, err error) {
 	if err = AssertMarker(r, x, AMF0_NUMBER_MARKER); err != nil {
 		return
@@ -23,6 +25,8 @@ func (d *Decoder) DecodeAmf0Number(r io.Reader, x bool) (result float64, err err
 	return
 }
 
+// marker: 1 byte 0x01
+// format: 1 byte, 0x00 = false, 0x01 = true
 func (d *Decoder) DecodeAmf0Boolean(r io.Reader, x bool) (result bool, err error) {
 	if err = AssertMarker(r, x, AMF0_BOOLEAN_MARKER); err != nil {
 		return
@@ -42,6 +46,10 @@ func (d *Decoder) DecodeAmf0Boolean(r io.Reader, x bool) (result bool, err error
 	return false, Error("decode amf0: unexpected value %v for boolean", b)
 }
 
+// marker: 1 byte 0x02
+// format:
+// - 2 byte big endian uint16 header to determine size
+// - n (size) byte utf8 string
 func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err error) {
 	if err = AssertMarker(r, x, AMF0_STRING_MARKER); err != nil {
 		return
@@ -61,11 +69,17 @@ func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err erro
 	return string(bytes), nil
 }
 
+// marker: 1 byte 0x05
+// no additional data
 func (d *Decoder) DecodeAmf0Null(r io.Reader, x bool) (result interface{}, err error) {
 	err = AssertMarker(r, x, AMF0_NULL_MARKER)
 	return
 }
 
+// marker: 1 byte 0x0c
+// format:
+// - 4 byte big endian uint32 header to determine size
+// - n (size) byte utf8 string
 func (d *Decoder) DecodeAmf0LongString(r io.Reader, x bool) (result string, err error) {
 	if err = AssertMarker(r, x, AMF0_LONG_STRING_MARKER); err != nil {
 		return
@@ -85,6 +99,8 @@ func (d *Decoder) DecodeAmf0LongString(r io.Reader, x bool) (result string, err 
 	return string(bytes), nil
 }
 
+// marker: 1 byte 0x0d
+// no additional data
 func (d *Decoder) DecodeAmf0Unsupported(r io.Reader, x bool) (result interface{}, err error) {
 	err = AssertMarker(r, x, AMF0_UNSUPPORTED_MARKER)
 	return
