@@ -3,7 +3,6 @@ package amf
 import (
 	"encoding/binary"
 	"io"
-	"math"
 )
 
 // marker: 1 byte 0x00
@@ -13,14 +12,10 @@ func (d *Decoder) DecodeAmf0Number(r io.Reader, decodeMarker bool) (result float
 		return
 	}
 
-	var bytes []byte
-
-	if bytes, err = ReadBytes(r, 8); err != nil {
-		return
+	err = binary.Read(r, binary.BigEndian, &result)
+	if err != nil {
+		return float64(0), Error("amf0 decode: unable to read number: %s", err)
 	}
-
-	u64n := binary.BigEndian.Uint64(bytes)
-	result = math.Float64frombits(u64n)
 
 	return
 }
@@ -55,15 +50,15 @@ func (d *Decoder) DecodeAmf0String(r io.Reader, decodeMarker bool) (result strin
 		return
 	}
 
-	var bytes []byte
-	if bytes, err = ReadBytes(r, 2); err != nil {
-		return
+	var length uint16
+	err = binary.Read(r, binary.BigEndian, &length)
+	if err != nil {
+		return "", Error("decode amf0: unable to decode string length: %s", err)
 	}
 
-	len := binary.BigEndian.Uint16(bytes)
-
-	if bytes, err = ReadBytes(r, int(len)); err != nil {
-		return
+	var bytes = make([]byte, length)
+	if bytes, err = ReadBytes(r, int(length)); err != nil {
+		return "", Error("decode amf0: unable to decode string value: %s", err)
 	}
 
 	return string(bytes), nil
@@ -89,7 +84,7 @@ func (d *Decoder) DecodeAmf0Object(r io.Reader, decodeMarker bool) (Object, erro
 
 		if key == "" {
 			if err = AssertMarker(r, true, AMF0_OBJECT_END_MARKER); err != nil {
-				return nil, Error("decode amf0: expected object end marker")
+				return nil, Error("decode amf0: expected object end marker: %s", err)
 			}
 
 			break
@@ -129,12 +124,12 @@ func (d *Decoder) DecodeAmf0Reference(r io.Reader, decodeMarker bool) (interface
 	}
 
 	var err error
-	var bytes []byte
-	if bytes, err = ReadBytes(r, 2); err != nil {
-		return nil, err
-	}
+	var ref uint16
 
-	ref := binary.BigEndian.Uint16(bytes)
+	err = binary.Read(r, binary.BigEndian, &ref)
+	if err != nil {
+		return nil, Error("decode amf0: unable to decode reference id: %s", err)
+	}
 
 	if int(ref) > len(d.refCache) {
 		return nil, Error("decode amf0: bad reference %d (current length %d)", ref, len(d.refCache))
@@ -156,12 +151,8 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, decodeMarker bool) (EcmaArray
 		return nil, err
 	}
 
-	bytes, err := ReadBytes(r, 4)
-	if err != nil {
-		return nil, err
-	}
-
-	l := binary.BigEndian.Uint32(bytes)
+	var length uint32
+	err := binary.Read(r, binary.BigEndian, &length)
 
 	obj, err := d.DecodeAmf0Object(r, false)
 	if err != nil {
@@ -170,8 +161,8 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, decodeMarker bool) (EcmaArray
 
 	result := EcmaArray(obj)
 
-	if int(l) != len(result) {
-		return nil, Error("decode amf0: ecma array has unexpected length %d (expected %d)", len(result), l)
+	if int(length) != len(result) {
+		return nil, Error("decode amf0: ecma array has unexpected length %d (expected %d)", len(result), length)
 	}
 
 	return result, nil
@@ -186,18 +177,18 @@ func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, decodeMarker bool) (StrictA
 		return nil, err
 	}
 
-	var bytes []byte
 	var err error
-	if bytes, err = ReadBytes(r, 4); err != nil {
-		return nil, err
+	var length uint32
+
+	err = binary.Read(r, binary.BigEndian, &length)
+	if err != nil {
+		return nil, Error("decode amf0: unable to decode strict array length: %s", err)
 	}
 
-	l := binary.BigEndian.Uint32(bytes)
-
-	result := make(StrictArray, l)
+	result := make(StrictArray, length)
 	d.refCache = append(d.refCache, result)
 
-	for i := uint32(0); i < l; i++ {
+	for i := uint32(0); i < length; i++ {
 		value, err := d.DecodeAmf0(r)
 		if err != nil {
 			return nil, Error("decode amf0: unable to decode strict array object: %s", err)
@@ -239,15 +230,15 @@ func (d *Decoder) DecodeAmf0LongString(r io.Reader, decodeMarker bool) (result s
 		return
 	}
 
-	var bytes []byte
-	if bytes, err = ReadBytes(r, 4); err != nil {
-		return
+	var length uint32
+	err = binary.Read(r, binary.BigEndian, &length)
+	if err != nil {
+		return "", Error("decode amf0: unable to decode long string length: %s", err)
 	}
 
-	len := binary.BigEndian.Uint32(bytes)
-
-	if bytes, err = ReadBytes(r, int(len)); err != nil {
-		return
+	var bytes = make([]byte, length)
+	if bytes, err = ReadBytes(r, int(length)); err != nil {
+		return "", Error("decode amf0: unable to decode long string value: %s", err)
 	}
 
 	return string(bytes), nil
