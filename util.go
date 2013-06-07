@@ -3,8 +3,11 @@ package amf
 import (
 	"errors"
 	"fmt"
+	"github.com/jcoene/gologger"
 	"io"
 )
+
+var log logger.Logger = *logger.NewLogger(logger.LOG_LEVEL_DEBUG, "amf")
 
 func Error(f string, v ...interface{}) error {
 	return errors.New(fmt.Sprintf(f, v...))
