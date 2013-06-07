@@ -73,13 +73,13 @@ func (e *Encoder) EncodeAmf0String(w io.Writer, val string, encodeMarker bool) (
 	length := uint16(len(val))
 	err = binary.Write(w, binary.BigEndian, length)
 	if err != nil {
-		return
+		return n, Error("encode amf0: unable to encode string length: %s", err)
 	}
 	n += 2
 
 	m, err = w.Write([]byte(val))
 	if err != nil {
-		return
+		return n, Error("encode amf0: unable to encode string value: %s", err)
 	}
 	n += m
 
@@ -176,7 +176,7 @@ func (e *Encoder) EncodeAmf0LongString(w io.Writer, val string, encodeMarker boo
 
 	m, err = w.Write([]byte(val))
 	if err != nil {
-		return
+		return n, Error("encode amf0: unable to encode long string value: %s", err)
 	}
 	n += m
 
