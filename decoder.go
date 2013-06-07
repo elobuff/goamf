@@ -21,7 +21,7 @@ func (d *Decoder) Decode(r io.Reader, v Version) (interface{}, error) {
 		return d.DecodeAmf3(r)
 	}
 
-	return nil, errors.New(fmt.Sprintf("decode amf: version %d", v))
+	return nil, errors.New(fmt.Sprintf("decode amf: unsupported version %d", v))
 }
 
 func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
@@ -38,38 +38,43 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_STRING_MARKER:
 		return d.DecodeAmf0String(r, false)
 	case AMF0_OBJECT_MARKER:
-		return nil, errors.New("decode amf0: unsupported type object")
+		return nil, Error("decode amf0: unsupported type object")
 	case AMF0_MOVIECLIP_MARKER:
-		return nil, errors.New("decode amf0: unsupported type movieclip")
+		return nil, Error("decode amf0: unsupported type movieclip")
 	case AMF0_NULL_MARKER:
 		return d.DecodeAmf0Null(r, false)
 	case AMF0_UNDEFINED_MARKER:
-		return nil, errors.New("decode amf0: unsupported type undefined")
+		return nil, Error("decode amf0: unsupported type undefined")
 	case AMF0_REFERENCE_MARKER:
-		return nil, errors.New("decode amf0: unsupported type reference")
+		return nil, Error("decode amf0: unsupported type reference")
 	case AMF0_ECMA_ARRAY_MARKER:
-		return nil, errors.New("decode amf0: unsupported type ecma array")
+		return nil, Error("decode amf0: unsupported type ecma array")
 	case AMF0_STRICT_ARRAY_MARKER:
-		return nil, errors.New("decode amf0: unsupported type strict array")
+		return nil, Error("decode amf0: unsupported type strict array")
 	case AMF0_DATE_MARKER:
-		return nil, errors.New("decode amf0: unsupported type date")
+		return nil, Error("decode amf0: unsupported type date")
 	case AMF0_LONG_STRING_MARKER:
-		return nil, errors.New("decode amf0: unsupported type long string")
+		return nil, Error("decode amf0: unsupported type long string")
 	case AMF0_UNSUPPORTED_MARKER:
-		return nil, errors.New("decode amf0: unsupported type unsupported")
+		return nil, Error("decode amf0: unsupported type unsupported")
 	case AMF0_RECORDSET_MARKER:
-		return nil, errors.New("decode amf0: unsupported type recordset")
+		return nil, Error("decode amf0: unsupported type recordset")
 	case AMF0_XML_DOCUMENT_MARKER:
-		return nil, errors.New("decode amf0: unsupported type xml document")
+		return nil, Error("decode amf0: unsupported type xml document")
 	case AMF0_TYPED_OBJECT_MARKER:
-		return nil, errors.New("decode amf0: unsupported type typed object")
+		return nil, Error("decode amf0: unsupported type typed object")
 	case AMF0_ACMPLUS_OBJECT_MARKER:
-		return nil, errors.New("decode amf0: unsupported type acm plus object")
+		return nil, Error("decode amf0: unsupported type acm plus object")
 	}
 
-	return nil, nil
+	return nil, Error("decode amf0: unsupported type %d", marker)
 }
 
 func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
-	return nil, nil
+	marker, err := ReadMarker(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, Error("decode amf3: unsupported type %d", marker)
 }

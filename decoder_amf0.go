@@ -2,8 +2,6 @@ package amf
 
 import (
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"io"
 	"math"
 )
@@ -41,7 +39,7 @@ func (d *Decoder) DecodeAmf0Boolean(r io.Reader, x bool) (result bool, err error
 		return true, nil
 	}
 
-	return false, errors.New(fmt.Sprintf("decode boolean failed: unexpected value %v", b))
+	return false, Error("decode amf0: unexpected value %v for boolean", b)
 }
 
 func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err error) {

@@ -1,8 +1,6 @@
 package amf
 
 import (
-	"errors"
-	"fmt"
 	"io"
 )
 
@@ -17,7 +15,7 @@ func (e *Encoder) Encode(w io.Writer, obj interface{}, v Version) (uint32, error
 		return e.EncodeAmf0(w, obj)
 	}
 
-	return 0, errors.New(fmt.Sprintf("unsupported amf version %d", v))
+	return 0, Error("encode amf: unsupported version %d", v)
 }
 
 func (e *Encoder) EncodeAmf0(w io.Writer, obj interface{}) (n uint32, err error) {

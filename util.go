@@ -6,6 +6,10 @@ import (
 	"io"
 )
 
+func Error(f string, v ...interface{}) error {
+	return errors.New(fmt.Sprintf(f, v...))
+}
+
 func ReadByte(r io.Reader) (byte, error) {
 	bytes, err := ReadBytes(r, 1)
 	if err != nil {
@@ -24,7 +28,7 @@ func ReadBytes(r io.Reader, n int) ([]byte, error) {
 	}
 
 	if m != n {
-		return bytes, errors.New(fmt.Sprintf("decode read bytes failed: expected %d got %d", m, n))
+		return bytes, Error("decode read bytes failed: expected %d got %d", m, n)
 	}
 
 	return bytes, nil
@@ -45,7 +49,7 @@ func AssertMarker(r io.Reader, x bool, m byte) error {
 	}
 
 	if marker != m {
-		return errors.New(fmt.Sprintf("decode assert marker failed: expected %v got %v", m, marker))
+		return Error("decode assert marker failed: expected %v got %v", m, marker)
 	}
 
 	return nil
