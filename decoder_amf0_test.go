@@ -164,7 +164,7 @@ func TestDecodeAmf0Object(t *testing.T) {
 		t.Errorf("expected result to cast to object")
 	}
 	if obj["foo"] != "bar" {
-		t.Errorf("expected {foo=bar}, got %v", obj)
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 
 	// Test object interface with marker
@@ -178,7 +178,7 @@ func TestDecodeAmf0Object(t *testing.T) {
 		t.Errorf("expected result to cast to object")
 	}
 	if obj["foo"] != "bar" {
-		t.Errorf("expected {foo=bar}, got %v", obj)
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 
 	// Test object interface without marker
@@ -192,7 +192,7 @@ func TestDecodeAmf0Object(t *testing.T) {
 		t.Errorf("expected result to cast to object")
 	}
 	if obj["foo"] != "bar" {
-		t.Errorf("expected {foo=bar}, got %v", obj)
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 }
 
@@ -243,6 +243,53 @@ func TestDecodeAmf0Undefined(t *testing.T) {
 	}
 	if got != nil {
 		t.Errorf("expect nil got %v", got)
+	}
+}
+
+func TestDecodeAmf0EcmaArray(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x02, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x09})
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok := got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
+	}
+
+	// Test object interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0EcmaArray(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok = got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
+	}
+
+	// Test object interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0EcmaArray(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok = got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 }
 

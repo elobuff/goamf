@@ -120,6 +120,38 @@ func (d *Decoder) DecodeAmf0Undefined(r io.Reader, x bool) (result interface{}, 
 	return
 }
 
+// marker: 1 byte 0x08
+// format:
+// - 4 byte big endian uint32 with length of associative array
+// - normal object format:
+//   - encoded string followed by encoded value
+//   - terminated with empty string followed by 1 byte 0x09
+func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
+	if err := AssertMarker(r, x, AMF0_ECMA_ARRAY_MARKER); err != nil {
+		return nil, err
+	}
+
+	var err error
+	var bytes []byte
+	if bytes, err = ReadBytes(r, 4); err != nil {
+		return nil, err
+	}
+
+	l := binary.BigEndian.Uint32(bytes)
+
+	result := make(map[string]interface{})
+	result, err = d.DecodeAmf0Object(r, false)
+	if err != nil {
+		return nil, Error("decode amf0: unable to decode ecma array object: %s", err)
+	}
+
+	if int(l) != len(result) {
+		return nil, Error("decode amf0: ecma array has unexpected length %d (expected %d)", len(result), l)
+	}
+
+	return result, nil
+}
+
 // marker: 1 byte 0x0c
 // format:
 // - 4 byte big endian uint32 header to determine size
