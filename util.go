@@ -13,6 +13,19 @@ func Error(f string, v ...interface{}) error {
 	return errors.New(fmt.Sprintf(f, v...))
 }
 
+func WriteByte(w io.Writer, b byte) (err error) {
+	bytes := make([]byte, 1)
+	bytes[0] = b
+
+	_, err = WriteBytes(w, bytes)
+
+	return
+}
+
+func WriteBytes(w io.Writer, bytes []byte) (int, error) {
+	return w.Write(bytes)
+}
+
 func ReadByte(r io.Reader) (byte, error) {
 	bytes, err := ReadBytes(r, 1)
 	if err != nil {
@@ -35,6 +48,10 @@ func ReadBytes(r io.Reader, n int) ([]byte, error) {
 	}
 
 	return bytes, nil
+}
+
+func WriteMarker(w io.Writer, m byte) error {
+	return WriteByte(w, m)
 }
 
 func ReadMarker(r io.Reader) (byte, error) {
