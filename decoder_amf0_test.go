@@ -358,6 +358,42 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	}
 }
 
+func TestDecodeAmf0Date(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x0b, 0x40, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+	expect := float64(5)
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+
+	// Test date interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0Date(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+
+	// Test date interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0Date(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}
+
 func TestDecodeAmf0LongString(t *testing.T) {
 	buf := bytes.NewReader([]byte{0x0c, 0x00, 0x00, 0x00, 0x03, 0x66, 0x6f, 0x6f})
 	expect := "foo"

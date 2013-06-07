@@ -182,6 +182,27 @@ func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (Array, error) {
 	return result, nil
 }
 
+// marker: 1 byte 0x0b
+// format:
+// - normal number format:
+//   - 8 byte big endian float64
+// - 2 byte unused
+func (d *Decoder) DecodeAmf0Date(r io.Reader, x bool) (result float64, err error) {
+	if err = AssertMarker(r, x, AMF0_DATE_MARKER); err != nil {
+		return
+	}
+
+	if result, err = d.DecodeAmf0Number(r, false); err != nil {
+		return float64(0), Error("decode amf0: unable to decode float in date: %s", err)
+	}
+
+	if _, err = ReadBytes(r, 2); err != nil {
+		return float64(0), Error("decode amf0: unable to read 2 trail bytes in date: %s", err)
+	}
+
+	return
+}
+
 // marker: 1 byte 0x0c
 // format:
 // - 4 byte big endian uint32 header to determine size
