@@ -293,6 +293,71 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	}
 }
 
+func TestDecodeAmf0StrictArray(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x0a, 0x00, 0x00, 0x00, 0x03, 0x00, 0x40, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x05})
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	arr, ok := got.(Array)
+	if ok != true {
+		t.Errorf("expected result to cast to array")
+	}
+	if arr[0] != float64(5) {
+		t.Errorf("expected array[0] to be 5, got %v", arr[0])
+	}
+	if arr[1] != "foo" {
+		t.Errorf("expected array[1] to be 'foo', got %v", arr[1])
+	}
+	if arr[2] != nil {
+		t.Errorf("expected array[2] to be nil, got %v", arr[2])
+	}
+
+	// Test object interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0StrictArray(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	arr, ok = got.(Array)
+	if ok != true {
+		t.Errorf("expected result to cast to array")
+	}
+	if arr[0] != float64(5) {
+		t.Errorf("expected array[0] to be 5, got %v", arr[0])
+	}
+	if arr[1] != "foo" {
+		t.Errorf("expected array[1] to be 'foo', got %v", arr[1])
+	}
+	if arr[2] != nil {
+		t.Errorf("expected array[2] to be nil, got %v", arr[2])
+	}
+
+	// Test object interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0StrictArray(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	arr, ok = got.(Array)
+	if ok != true {
+		t.Errorf("expected result to cast to array")
+	}
+	if arr[0] != float64(5) {
+		t.Errorf("expected array[0] to be 5, got %v", arr[0])
+	}
+	if arr[1] != "foo" {
+		t.Errorf("expected array[1] to be 'foo', got %v", arr[1])
+	}
+	if arr[2] != nil {
+		t.Errorf("expected array[2] to be nil, got %v", arr[2])
+	}
+}
+
 func TestDecodeAmf0LongString(t *testing.T) {
 	buf := bytes.NewReader([]byte{0x0c, 0x00, 0x00, 0x00, 0x03, 0x66, 0x6f, 0x6f})
 	expect := "foo"

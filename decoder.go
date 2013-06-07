@@ -50,7 +50,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_ECMA_ARRAY_MARKER:
 		return d.DecodeAmf0EcmaArray(r, false)
 	case AMF0_STRICT_ARRAY_MARKER:
-		return nil, Error("decode amf0: unsupported type strict array")
+		return d.DecodeAmf0StrictArray(r, false)
 	case AMF0_DATE_MARKER:
 		return nil, Error("decode amf0: unsupported type date")
 	case AMF0_LONG_STRING_MARKER:

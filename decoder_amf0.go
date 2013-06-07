@@ -152,6 +152,36 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
 	return result, nil
 }
 
+// marker: 1 byte 0x0a
+// format:
+// - 4 byte big endian uint32 to determine length of associative array
+// - n (length) encoded values
+func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (Array, error) {
+	if err := AssertMarker(r, x, AMF0_STRICT_ARRAY_MARKER); err != nil {
+		return nil, err
+	}
+
+	var bytes []byte
+	var err error
+	if bytes, err = ReadBytes(r, 4); err != nil {
+		return nil, err
+	}
+
+	l := binary.BigEndian.Uint32(bytes)
+	result := make([]interface{}, l)
+
+	for i := uint32(0); i < l; i++ {
+		value, err := d.DecodeAmf0(r)
+		if err != nil {
+			return nil, Error("decode amf0: unable to decode strict array object: %s", err)
+		}
+
+		result[i] = value
+	}
+
+	return result, nil
+}
+
 // marker: 1 byte 0x0c
 // format:
 // - 4 byte big endian uint32 header to determine size
