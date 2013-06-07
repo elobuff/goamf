@@ -38,7 +38,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_STRING_MARKER:
 		return d.DecodeAmf0String(r, false)
 	case AMF0_OBJECT_MARKER:
-		return nil, Error("decode amf0: unsupported type object")
+		return d.DecodeAmf0Object(r, false)
 	case AMF0_MOVIECLIP_MARKER:
 		return nil, Error("decode amf0: unsupported type movieclip")
 	case AMF0_NULL_MARKER:

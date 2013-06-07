@@ -149,6 +149,53 @@ func TestDecodeAmf0String(t *testing.T) {
 	}
 }
 
+func TestDecodeAmf0Object(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x03, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x02, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x09})
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok := got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {foo=bar}, got %v", obj)
+	}
+
+	// Test object interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0Object(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok = got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {foo=bar}, got %v", obj)
+	}
+
+	// Test object interface without marker
+	buf.Seek(1, 0)
+	got, err = dec.DecodeAmf0Object(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok = got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+	if obj["foo"] != "bar" {
+		t.Errorf("expected {foo=bar}, got %v", obj)
+	}
+}
+
 func TestDecodeAmf0Null(t *testing.T) {
 	buf := bytes.NewReader([]byte{0x05})
 

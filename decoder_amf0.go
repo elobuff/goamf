@@ -69,6 +69,43 @@ func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err erro
 	return string(bytes), nil
 }
 
+// marker: 1 byte 0x03
+// format:
+// - encoded string followed by encoded value
+// - terminated with empty string followed by 1 byte 0x09
+func (d *Decoder) DecodeAmf0Object(r io.Reader, x bool) (Object, error) {
+	if err := AssertMarker(r, x, AMF0_OBJECT_MARKER); err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]interface{})
+
+	for {
+		key, err := d.DecodeAmf0String(r, false)
+		if err != nil {
+			return nil, err
+		}
+
+		if key == "" {
+			if err = AssertMarker(r, true, AMF0_OBJECT_END_MARKER); err != nil {
+				return nil, Error("decode amf0: expected object end marker")
+			}
+
+			break
+		}
+
+		value, err := d.DecodeAmf0(r)
+		if err != nil {
+			return nil, Error("decode amf0: unable to decode object value: %s", err)
+		}
+
+		result[key] = value
+	}
+
+	return result, nil
+
+}
+
 // marker: 1 byte 0x05
 // no additional data
 func (d *Decoder) DecodeAmf0Null(r io.Reader, x bool) (result interface{}, err error) {
