@@ -58,3 +58,10 @@ type TypedObject struct {
 	Type   string
 	Object Object
 }
+
+func NewTypedObject() *TypedObject {
+	return &TypedObject{
+		Type:   "",
+		Object: make(Object),
+	}
+}
