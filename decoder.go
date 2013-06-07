@@ -1,11 +1,9 @@
 package amf
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
-	"math"
 )
 
 type Decoder struct {
@@ -23,7 +21,7 @@ func (d *Decoder) Decode(r io.Reader, v Version) (interface{}, error) {
 		return d.DecodeAmf3(r)
 	}
 
-	return nil, errors.New(fmt.Sprintf("unsupported amf version %d", v))
+	return nil, errors.New(fmt.Sprintf("decode amf: version %d", v))
 }
 
 func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
@@ -44,7 +42,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_MOVIECLIP_MARKER:
 		return nil, errors.New("decode amf0: unsupported type movieclip")
 	case AMF0_NULL_MARKER:
-		return nil, errors.New("decode amf0: unsupported type null")
+		return d.DecodeAmf0Null(r, false)
 	case AMF0_UNDEFINED_MARKER:
 		return nil, errors.New("decode amf0: unsupported type undefined")
 	case AMF0_REFERENCE_MARKER:
@@ -74,59 +72,4 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 
 func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 	return nil, nil
-}
-
-func (d *Decoder) DecodeAmf0Number(r io.Reader, x bool) (result float64, err error) {
-	if err = AssertMarker(r, x, AMF0_NUMBER_MARKER); err != nil {
-		return
-	}
-
-	var bytes []byte
-
-	if bytes, err = ReadBytes(r, 8); err != nil {
-		return
-	}
-
-	u64n := binary.BigEndian.Uint64(bytes)
-	result = math.Float64frombits(u64n)
-
-	return
-}
-
-func (d *Decoder) DecodeAmf0Boolean(r io.Reader, x bool) (result bool, err error) {
-	if err = AssertMarker(r, x, AMF0_BOOLEAN_MARKER); err != nil {
-		return
-	}
-
-	var b byte
-	if b, err = ReadByte(r); err != nil {
-		return
-	}
-
-	if b == AMF0_BOOLEAN_FALSE {
-		return false, nil
-	} else if b == AMF0_BOOLEAN_TRUE {
-		return true, nil
-	}
-
-	return false, errors.New(fmt.Sprintf("decode boolean failed: unexpected value %v", b))
-}
-
-func (d *Decoder) DecodeAmf0String(r io.Reader, x bool) (result string, err error) {
-	if err = AssertMarker(r, x, AMF0_STRING_MARKER); err != nil {
-		return
-	}
-
-	var bytes []byte
-	if bytes, err = ReadBytes(r, 2); err != nil {
-		return
-	}
-
-	len := binary.BigEndian.Uint16(bytes)
-
-	if bytes, err = ReadBytes(r, int(len)); err != nil {
-		return
-	}
-
-	return string(bytes), nil
 }

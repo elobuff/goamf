@@ -148,3 +148,28 @@ func TestDecodeAmf0String(t *testing.T) {
 		t.Errorf("expect %v got %v", expect, got)
 	}
 }
+
+func TestDecodeAmf0Null(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x05})
+
+	dec := &Decoder{}
+
+	// Test main interface
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if got != nil {
+		t.Errorf("expect nil got %v", got)
+	}
+
+	// Test null interface with marker
+	buf.Seek(0, 0)
+	got, err = dec.DecodeAmf0Null(buf, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if got != nil {
+		t.Errorf("expect nil got %v", got)
+	}
+}
