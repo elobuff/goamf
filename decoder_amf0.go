@@ -65,3 +65,22 @@ func (d *Decoder) DecodeAmf0Null(r io.Reader, x bool) (result interface{}, err e
 	err = AssertMarker(r, x, AMF0_NULL_MARKER)
 	return
 }
+
+func (d *Decoder) DecodeAmf0LongString(r io.Reader, x bool) (result string, err error) {
+	if err = AssertMarker(r, x, AMF0_LONG_STRING_MARKER); err != nil {
+		return
+	}
+
+	var bytes []byte
+	if bytes, err = ReadBytes(r, 4); err != nil {
+		return
+	}
+
+	len := binary.BigEndian.Uint32(bytes)
+
+	if bytes, err = ReadBytes(r, int(len)); err != nil {
+		return
+	}
+
+	return string(bytes), nil
+}
