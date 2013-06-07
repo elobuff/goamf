@@ -235,7 +235,7 @@ func TestDecodeAmf0Undefined(t *testing.T) {
 		t.Errorf("expect nil got %v", got)
 	}
 
-	// Test null interface with marker
+	// Test undefined interface with marker
 	buf.Seek(0, 0)
 	got, err = dec.DecodeAmf0Undefined(buf, true)
 	if err != nil {
@@ -264,7 +264,7 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 
-	// Test object interface with marker
+	// Test ecma array interface with marker
 	buf.Seek(0, 0)
 	got, err = dec.DecodeAmf0EcmaArray(buf, true)
 	if err != nil {
@@ -278,7 +278,7 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
 	}
 
-	// Test object interface without marker
+	// Test ecma array interface without marker
 	buf.Seek(1, 0)
 	got, err = dec.DecodeAmf0EcmaArray(buf, false)
 	if err != nil {
@@ -317,7 +317,7 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 		t.Errorf("expected array[2] to be nil, got %v", arr[2])
 	}
 
-	// Test object interface with marker
+	// Test strict array interface with marker
 	buf.Seek(0, 0)
 	got, err = dec.DecodeAmf0StrictArray(buf, true)
 	if err != nil {
@@ -337,7 +337,7 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 		t.Errorf("expected array[2] to be nil, got %v", arr[2])
 	}
 
-	// Test object interface without marker
+	// Test strict array interface without marker
 	buf.Seek(1, 0)
 	got, err = dec.DecodeAmf0StrictArray(buf, false)
 	if err != nil {
@@ -409,7 +409,7 @@ func TestDecodeAmf0LongString(t *testing.T) {
 		t.Errorf("expect %v got %v", expect, got)
 	}
 
-	// Test string interface with marker
+	// Test long string interface with marker
 	buf.Seek(0, 0)
 	got, err = dec.DecodeAmf0LongString(buf, true)
 	if err != nil {
@@ -419,7 +419,7 @@ func TestDecodeAmf0LongString(t *testing.T) {
 		t.Errorf("expect %v got %v", expect, got)
 	}
 
-	// Test string interface without marker
+	// Test long string interface without marker
 	buf.Seek(1, 0)
 	got, err = dec.DecodeAmf0LongString(buf, false)
 	if err != nil {
@@ -444,7 +444,7 @@ func TestDecodeAmf0Unsupported(t *testing.T) {
 		t.Errorf("expect nil got %v", got)
 	}
 
-	// Test null interface with marker
+	// Test unsupported interface with marker
 	buf.Seek(0, 0)
 	got, err = dec.DecodeAmf0Unsupported(buf, true)
 	if err != nil {
