@@ -78,7 +78,8 @@ func (d *Decoder) DecodeAmf0Object(r io.Reader, x bool) (Object, error) {
 		return nil, err
 	}
 
-	result := make(map[string]interface{})
+	result := make(Object)
+	d.refCache = append(d.refCache, result)
 
 	for {
 		key, err := d.DecodeAmf0String(r, false)
@@ -120,6 +121,30 @@ func (d *Decoder) DecodeAmf0Undefined(r io.Reader, x bool) (result interface{}, 
 	return
 }
 
+// marker: 1 byte 0x07
+// format: 2 byte big endian uint16
+func (d *Decoder) DecodeAmf0Reference(r io.Reader, x bool) (interface{}, error) {
+	if err := AssertMarker(r, x, AMF0_REFERENCE_MARKER); err != nil {
+		return nil, err
+	}
+
+	var err error
+	var bytes []byte
+	if bytes, err = ReadBytes(r, 2); err != nil {
+		return nil, err
+	}
+
+	ref := binary.BigEndian.Uint16(bytes)
+
+	if int(ref) > len(d.refCache) {
+		return nil, Error("decode amf0: bad reference %d (current length %d)", ref, len(d.refCache))
+	}
+
+	result := d.refCache[ref]
+
+	return result, nil
+}
+
 // marker: 1 byte 0x08
 // format:
 // - 4 byte big endian uint32 with length of associative array
@@ -131,16 +156,14 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, x bool) (Object, error) {
 		return nil, err
 	}
 
-	var err error
-	var bytes []byte
-	if bytes, err = ReadBytes(r, 4); err != nil {
+	bytes, err := ReadBytes(r, 4)
+	if err != nil {
 		return nil, err
 	}
 
 	l := binary.BigEndian.Uint32(bytes)
 
-	result := make(map[string]interface{})
-	result, err = d.DecodeAmf0Object(r, false)
+	result, err := d.DecodeAmf0Object(r, false)
 	if err != nil {
 		return nil, Error("decode amf0: unable to decode ecma array object: %s", err)
 	}
@@ -168,7 +191,9 @@ func (d *Decoder) DecodeAmf0StrictArray(r io.Reader, x bool) (Array, error) {
 	}
 
 	l := binary.BigEndian.Uint32(bytes)
-	result := make([]interface{}, l)
+
+	result := make(Array, l)
+	d.refCache = append(d.refCache, result)
 
 	for i := uint32(0); i < l; i++ {
 		value, err := d.DecodeAmf0(r)
@@ -255,11 +280,14 @@ func (d *Decoder) DecodeAmf0XmlDocument(r io.Reader, x bool) (result string, err
 //   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
 func (d *Decoder) DecodeAmf0TypedObject(r io.Reader, x bool) (*TypedObject, error) {
-	result := &TypedObject{}
+	result := new(TypedObject)
+
 	err := AssertMarker(r, x, AMF0_TYPED_OBJECT_MARKER)
 	if err != nil {
 		return result, err
 	}
+
+	d.refCache = append(d.refCache, result)
 
 	result.Type, err = d.DecodeAmf0String(r, false)
 	if err != nil {

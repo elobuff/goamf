@@ -246,6 +246,26 @@ func TestDecodeAmf0Undefined(t *testing.T) {
 	}
 }
 
+func TestDecodeReference(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x03, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x07, 0x00, 0x00, 0x00, 0x00, 0x09})
+
+	dec := &Decoder{}
+
+	got, err := dec.DecodeAmf0(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	obj, ok := got.(Object)
+	if ok != true {
+		t.Errorf("expected result to cast to object")
+	}
+
+	_, ok2 := obj["foo"].(Object)
+	if ok2 != true {
+		t.Errorf("expected foo value to cast to object")
+	}
+}
+
 func TestDecodeAmf0EcmaArray(t *testing.T) {
 	buf := bytes.NewReader([]byte{0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x02, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x09})
 

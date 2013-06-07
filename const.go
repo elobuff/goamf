@@ -58,14 +58,3 @@ type TypedObject struct {
 	Type   string
 	Object Object
 }
-
-func MakeObject() *Object {
-	return &Object{}
-}
-
-func MakeTypedObject() *TypedObject {
-	return &TypedObject{
-		Type:   "",
-		Object: *MakeObject(),
-	}
-}
