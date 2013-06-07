@@ -13,15 +13,15 @@ type Decoder struct {
 	traitCache  []interface{}
 }
 
-func (d *Decoder) Decode(r io.Reader, v Version) (interface{}, error) {
-	switch v {
+func (d *Decoder) Decode(r io.Reader, ver Version) (interface{}, error) {
+	switch ver {
 	case 0:
 		return d.DecodeAmf0(r)
 	case 3:
 		return d.DecodeAmf3(r)
 	}
 
-	return nil, errors.New(fmt.Sprintf("decode amf: unsupported version %d", v))
+	return nil, errors.New(fmt.Sprintf("decode amf: unsupported version %d", ver))
 }
 
 func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
@@ -64,7 +64,7 @@ func (d *Decoder) DecodeAmf0(r io.Reader) (interface{}, error) {
 	case AMF0_TYPED_OBJECT_MARKER:
 		return d.DecodeAmf0TypedObject(r, false)
 	case AMF0_ACMPLUS_OBJECT_MARKER:
-		return nil, Error("decode amf0: unsupported type acm plus object")
+		return d.DecodeAmf3(r)
 	}
 
 	return nil, Error("decode amf0: unsupported type %d", marker)

@@ -41,8 +41,8 @@ func ReadMarker(r io.Reader) (byte, error) {
 	return ReadByte(r)
 }
 
-func AssertMarker(r io.Reader, x bool, m byte) error {
-	if x == false {
+func AssertMarker(r io.Reader, checkMarker bool, m byte) error {
+	if checkMarker == false {
 		return nil
 	}
 
