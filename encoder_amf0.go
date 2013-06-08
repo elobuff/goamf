@@ -35,7 +35,7 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 		return e.EncodeAmf0Number(w, float64(v.Float()), true)
 	case reflect.Array, reflect.Slice:
 		length := v.Len()
-		arr := make(StrictArray, length)
+		arr := make(Array, length)
 		for i := 0; i < length; i++ {
 			arr[i] = v.Index(int(i)).Interface()
 		}
@@ -233,7 +233,7 @@ func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val Object, encodeMarker bool
 // format:
 // - 4 byte big endian uint32 to determine length of associative array
 // - n (length) encoded values
-func (e *Encoder) EncodeAmf0StrictArray(w io.Writer, val StrictArray, encodeMarker bool) (n int, err error) {
+func (e *Encoder) EncodeAmf0StrictArray(w io.Writer, val Array, encodeMarker bool) (n int, err error) {
 	if encodeMarker {
 		if err = WriteMarker(w, AMF0_STRICT_ARRAY_MARKER); err != nil {
 			return

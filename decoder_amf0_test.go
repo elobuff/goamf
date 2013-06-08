@@ -325,7 +325,7 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok := got.(StrictArray)
+	arr, ok := got.(Array)
 	if ok != true {
 		t.Errorf("expected result to cast to strict array")
 	}
@@ -345,7 +345,7 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok = got.(StrictArray)
+	arr, ok = got.(Array)
 	if ok != true {
 		t.Errorf("expected result to cast to strict array")
 	}
@@ -365,7 +365,7 @@ func TestDecodeAmf0StrictArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	arr, ok = got.(StrictArray)
+	arr, ok = got.(Array)
 	if ok != true {
 		t.Errorf("expected result to cast to strict array")
 	}

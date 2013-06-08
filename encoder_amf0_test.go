@@ -124,7 +124,7 @@ func TestEncodeAmf0StrictArray(t *testing.T) {
 
 	enc := new(Encoder)
 
-	arr := make(StrictArray, 3)
+	arr := make(Array, 3)
 	arr[0] = float64(5)
 	arr[1] = "foo"
 	arr[2] = nil

@@ -98,7 +98,7 @@ func TestAmf0Array(t *testing.T) {
 		t.Error("amf0 object: %s", err)
 	}
 
-	result, ok := res.(StrictArray)
+	result, ok := res.(Array)
 	if ok != true {
 		t.Errorf("amf0 array conversion failed")
 	}

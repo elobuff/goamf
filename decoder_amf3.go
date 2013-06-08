@@ -157,7 +157,7 @@ func (d *Decoder) DecodeAmf3String(r io.Reader, decodeMarker bool) (result strin
 // format:
 // - u29 reference int. if reference, no more data. if not reference,
 //   length value of array.
-func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result StrictArray, err error) {
+func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array, err error) {
 	if err = AssertMarker(r, decodeMarker, AMF3_ARRAY_MARKER); err != nil {
 		return
 	}
@@ -174,7 +174,7 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Strict
 			return result, Error("amf3 decode: bad object reference for array")
 		}
 
-		res, ok := d.objectRefs[length].(StrictArray)
+		res, ok := d.objectRefs[length].(Array)
 		if ok != true {
 			return result, Error("amf3 decode: unable to extract array from object references")
 		}
