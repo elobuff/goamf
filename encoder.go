@@ -14,7 +14,7 @@ func (e *Encoder) Encode(w io.Writer, val interface{}, ver Version) (int, error)
 	case AMF0:
 		return e.EncodeAmf0(w, val)
 	case AMF3:
-		return e.EncodeAmf0(w, val)
+		return e.EncodeAmf3(w, val)
 	}
 
 	return 0, Error("encode amf: unsupported version %d", ver)

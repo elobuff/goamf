@@ -37,9 +37,9 @@ func Compare(val interface{}, ver Version, name string, t *testing.T) {
 }
 
 func TestAmf0Number(t *testing.T) {
-	Compare(float64(6), 0, "amf0 number uint32", t)
-	Compare(float64(1245), 0, "amf0 number int32", t)
-	Compare(float64(12345.678), 0, "amf0 number float64", t)
+	Compare(float64(3.14159), 0, "amf0 number float", t)
+	Compare(float64(124567890), 0, "amf0 number high", t)
+	Compare(float64(-34.2), 0, "amf0 number negative", t)
 }
 
 func TestAmf0String(t *testing.T) {
@@ -88,4 +88,30 @@ func TestAmf0Object(t *testing.T) {
 	if result["pi"] != float64(3.14159) {
 		t.Errorf("amf0 object float: comparison failed")
 	}
+}
+
+func TestAmf3Integer(t *testing.T) {
+	Compare(uint32(0), 3, "amf3 integer zero", t)
+	Compare(uint32(1245), 3, "amf3 integer low", t)
+	Compare(uint32(123456), 3, "amf3 integer high", t)
+}
+
+func TestAmf3Double(t *testing.T) {
+	Compare(float64(3.14159), 3, "amf3 double float", t)
+	Compare(float64(1234567890), 3, "amf3 double high", t)
+	Compare(float64(-12345), 3, "amf3 double negative", t)
+}
+
+func TestAmf3String(t *testing.T) {
+	Compare("a pup!", 0, "amf0 string simple", t)
+	Compare("日本語", 0, "amf0 string utf8", t)
+}
+
+func TestAmf3Boolean(t *testing.T) {
+	Compare(true, 3, "amf3 boolean true", t)
+	Compare(false, 3, "amf3 boolean false", t)
+}
+
+func TestAmf3Null(t *testing.T) {
+	Compare(nil, 3, "amf3 boolean nil", t)
 }
