@@ -140,7 +140,6 @@ func (e *Encoder) EncodeAmf3String(w io.Writer, val string, encodeMarker bool) (
 		}
 	}
 
-	// todo: add
 	length := uint32(len(val))
 	u29 := uint32(length<<1) | 0x01
 

@@ -95,7 +95,6 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 		return e.EncodeAmf3Integer(w, uint32(v.Uint()), true)
 	case reflect.Int64:
 		return e.EncodeAmf3Double(w, float64(v.Int()), true)
-		return 0, Error("encode amf3: unsupported type double")
 	case reflect.Uint64:
 		return e.EncodeAmf3Double(w, float64(v.Uint()), true)
 	case reflect.Float32, reflect.Float64:
