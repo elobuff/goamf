@@ -56,7 +56,10 @@ type Decoder struct {
 }
 
 type Encoder struct {
+	refCache   []interface{}
 	stringRefs []string
+	objectRefs []interface{}
+	traitRefs  []Trait
 }
 
 type Version uint8

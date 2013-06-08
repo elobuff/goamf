@@ -156,3 +156,28 @@ func TestEncodeAmf3Array(t *testing.T) {
 		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
 	}
 }
+
+func TestEncodeAmfObject(t *testing.T) {
+	enc := new(Encoder)
+	buf := new(bytes.Buffer)
+	expect := []byte{
+		0x0a, 0x23, 0x1f, 'o', 'r', 'g', '.', 'a',
+		'm', 'f', '.', 'A', 'S', 'C', 'l', 'a',
+		's', 's', 0x07, 'b', 'a', 'z', 0x07, 'f',
+		'o', 'o', 0x01, 0x06, 0x07, 'b', 'a', 'r',
+	}
+
+	to := *NewTypedObject()
+	to.Type = "org.amf.ASClass"
+	to.Object["foo"] = "bar"
+	to.Object["baz"] = nil
+
+	_, err := enc.EncodeAmf3(buf, to)
+	if err != nil {
+		t.Errorf("err: %s", err)
+	}
+
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer:\n%#v\ngot:\n%#v", expect, buf.Bytes())
+	}
+}
