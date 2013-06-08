@@ -63,5 +63,39 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 }
 
 func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
-	return 0, nil
+	if val == nil {
+		return 0, Error("encode amf3: unsupported type null")
+	}
+
+	v := reflect.ValueOf(val)
+	if !v.IsValid() {
+		return 0, Error("encode amf3: unsupported type null")
+	}
+
+	switch v.Kind() {
+	case reflect.String:
+		return 0, Error("encode amf3: unsupported type string")
+	case reflect.Bool:
+		return 0, Error("encode amf3: unsupported type bool")
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return e.EncodeAmf3Integer(w, uint32(v.Int()), true)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		return e.EncodeAmf3Integer(w, uint32(v.Uint()), true)
+	case reflect.Int64:
+		return 0, Error("encode amf3: unsupported type double")
+	case reflect.Uint64:
+		return 0, Error("encode amf3: unsupported type double")
+	case reflect.Float32, reflect.Float64:
+		return 0, Error("encode amf3: unsupported type double")
+	case reflect.Array, reflect.Slice:
+		return 0, Error("encode amf3: unsupported type array")
+	case reflect.Map:
+		return 0, Error("encode amf3: unsupported type object")
+	}
+
+	if _, ok := val.(TypedObject); ok {
+		return 0, Error("encode amf3: unsupported type typed object")
+	}
+
+	return 0, Error("encode amf3: unsupported type %s", v.Type())
 }

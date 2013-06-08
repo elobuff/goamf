@@ -76,5 +76,34 @@ func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 		return nil, err
 	}
 
+	switch marker {
+	case AMF3_UNDEFINED_MARKER:
+		return nil, Error("decode amf3: unsupported type undefined")
+	case AMF3_NULL_MARKER:
+		return nil, Error("decode amf3: unsupported type null")
+	case AMF3_FALSE_MARKER:
+		return nil, Error("decode amf3: unsupported type false")
+	case AMF3_TRUE_MARKER:
+		return nil, Error("decode amf3: unsupported type true")
+	case AMF3_INTEGER_MARKER:
+		return d.DecodeAmf3Integer(r, false)
+	case AMF3_DOUBLE_MARKER:
+		return nil, Error("decode amf3: unsupported type double")
+	case AMF3_STRING_MARKER:
+		return nil, Error("decode amf3: unsupported type string")
+	case AMF3_XMLDOC_MARKER:
+		return nil, Error("decode amf3: unsupported type xmldoc")
+	case AMF3_DATE_MARKER:
+		return nil, Error("decode amf3: unsupported type date")
+	case AMF3_ARRAY_MARKER:
+		return nil, Error("decode amf3: unsupported type array")
+	case AMF3_OBJECT_MARKER:
+		return nil, Error("decode amf3: unsupported type object")
+	case AMF3_XML_MARKER:
+		return nil, Error("decode amf3: unsupported type xml")
+	case AMF3_BYTEARRAY_MARKER:
+		return nil, Error("decode amf3: unsupported type bytearray")
+	}
+
 	return nil, Error("decode amf3: unsupported type %d", marker)
 }
