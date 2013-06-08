@@ -3,7 +3,52 @@ package amf
 import (
 	"encoding/binary"
 	"io"
+	"reflect"
 )
+
+// amf3 polymorphic router
+
+func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
+	if val == nil {
+		return e.EncodeAmf3Null(w, true)
+	}
+
+	v := reflect.ValueOf(val)
+	if !v.IsValid() {
+		return e.EncodeAmf3Null(w, true)
+	}
+
+	switch v.Kind() {
+	case reflect.String:
+		return e.EncodeAmf3String(w, v.String(), true)
+	case reflect.Bool:
+		if v.Bool() {
+			return e.EncodeAmf3True(w, true)
+		} else {
+			return e.EncodeAmf3False(w, true)
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return e.EncodeAmf3Integer(w, uint32(v.Int()), true)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		return e.EncodeAmf3Integer(w, uint32(v.Uint()), true)
+	case reflect.Int64:
+		return e.EncodeAmf3Double(w, float64(v.Int()), true)
+	case reflect.Uint64:
+		return e.EncodeAmf3Double(w, float64(v.Uint()), true)
+	case reflect.Float32, reflect.Float64:
+		return e.EncodeAmf3Double(w, float64(v.Float()), true)
+	case reflect.Array, reflect.Slice:
+		return 0, Error("encode amf3: unsupported type array")
+	case reflect.Map:
+		return 0, Error("encode amf3: unsupported type object")
+	}
+
+	if _, ok := val.(TypedObject); ok {
+		return 0, Error("encode amf3: unsupported type typed object")
+	}
+
+	return 0, Error("encode amf3: unsupported type %s", v.Type())
+}
 
 // marker: 1 byte 0x00
 // no additional data

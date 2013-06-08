@@ -48,6 +48,17 @@ const (
 	AMF3_BYTEARRAY_MARKER = 0x0c
 )
 
+type Decoder struct {
+	refCache   []interface{}
+	stringRefs []string
+	objectRefs []interface{}
+	traitRefs  []interface{}
+}
+
+type Encoder struct {
+	stringRefs []string
+}
+
 type Version uint8
 
 type StrictArray []interface{}

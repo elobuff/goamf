@@ -5,6 +5,45 @@ import (
 	"io"
 )
 
+// amf3 polymorphic router
+func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
+	marker, err := ReadMarker(r)
+	if err != nil {
+		return nil, err
+	}
+
+	switch marker {
+	case AMF3_UNDEFINED_MARKER:
+		return d.DecodeAmf3Undefined(r, false)
+	case AMF3_NULL_MARKER:
+		return d.DecodeAmf3Null(r, false)
+	case AMF3_FALSE_MARKER:
+		return d.DecodeAmf3False(r, false)
+	case AMF3_TRUE_MARKER:
+		return d.DecodeAmf3True(r, false)
+	case AMF3_INTEGER_MARKER:
+		return d.DecodeAmf3Integer(r, false)
+	case AMF3_DOUBLE_MARKER:
+		return d.DecodeAmf3Double(r, false)
+	case AMF3_STRING_MARKER:
+		return d.DecodeAmf3String(r, false)
+	case AMF3_XMLDOC_MARKER:
+		return nil, Error("decode amf3: unsupported type xmldoc")
+	case AMF3_DATE_MARKER:
+		return nil, Error("decode amf3: unsupported type date")
+	case AMF3_ARRAY_MARKER:
+		return d.DecodeAmf3Array(r, false)
+	case AMF3_OBJECT_MARKER:
+		return nil, Error("decode amf3: unsupported type object")
+	case AMF3_XML_MARKER:
+		return nil, Error("decode amf3: unsupported type xml")
+	case AMF3_BYTEARRAY_MARKER:
+		return nil, Error("decode amf3: unsupported type bytearray")
+	}
+
+	return nil, Error("decode amf3: unsupported type %d", marker)
+}
+
 // marker: 1 byte 0x00
 // no additional data
 func (d *Decoder) DecodeAmf3Undefined(r io.Reader, decodeMarker bool) (result interface{}, err error) {
