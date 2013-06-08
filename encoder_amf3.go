@@ -46,7 +46,15 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 		}
 		return e.EncodeAmf3Array(w, arr, true)
 	case reflect.Map:
-		return 0, Error("encode amf3: unsupported type object")
+		obj, ok := val.(Object)
+		if ok != true {
+			return 0, Error("encode amf3: unable to create object from map")
+		}
+
+		to := *new(TypedObject)
+		to.Object = obj
+
+		return e.EncodeAmf3Object(w, to, true)
 	}
 
 	if to, ok := val.(TypedObject); ok {

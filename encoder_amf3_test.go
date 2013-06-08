@@ -157,7 +157,7 @@ func TestEncodeAmf3Array(t *testing.T) {
 	}
 }
 
-func TestEncodeAmfObject(t *testing.T) {
+func TestEncodeAmf3Object(t *testing.T) {
 	enc := new(Encoder)
 	buf := new(bytes.Buffer)
 	expect := []byte{
