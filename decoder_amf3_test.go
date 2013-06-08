@@ -186,3 +186,31 @@ func TestDecodeAmf3Array(t *testing.T) {
 		}
 	}
 }
+
+func TestDecodeAmf3Object(t *testing.T) {
+	buf := bytes.NewReader([]byte{
+		0x0a, 0x23, 0x1f, 'o', 'r', 'g', '.', 'a',
+		'm', 'f', '.', 'A', 'S', 'C', 'l', 'a',
+		's', 's', 0x07, 'b', 'a', 'z', 0x07, 'f',
+		'o', 'o', 0x01, 0x06, 0x07, 'b', 'a', 'r',
+	})
+
+	dec := new(Decoder)
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("err: %s", err)
+	}
+
+	to, ok := got.(TypedObject)
+	if ok != true {
+		t.Error("unable to cast object as typed object")
+	}
+
+	if to.Object["foo"] != "bar" {
+		t.Error("expected foo to be bar, got: %+v", to.Object["foo"])
+	}
+
+	if to.Object["baz"] != nil {
+		t.Error("expected baz to be nil, got: %+v", to.Object["baz"])
+	}
+}

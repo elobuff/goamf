@@ -34,7 +34,7 @@ func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 	case AMF3_ARRAY_MARKER:
 		return d.DecodeAmf3Array(r, false)
 	case AMF3_OBJECT_MARKER:
-		return nil, Error("decode amf3: unsupported type object")
+		return d.DecodeAmf3Object(r, false)
 	case AMF3_XML_MARKER:
 		return nil, Error("decode amf3: unsupported type xml")
 	case AMF3_BYTEARRAY_MARKER:
@@ -193,12 +193,123 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 		return result, Error("amf3 decode: array key is not empty, can't handle associative array")
 	}
 
-	for i := uint32(0); i < length; i++ {
+	for i := uint32(0); i < refVal; i++ {
 		tmp, err := d.DecodeAmf3(r)
 		if err != nil {
 			return result, Error("amf3 decode: array element could not be decoded: %s", err)
 		}
 		result = append(result, tmp)
+	}
+
+	return
+}
+
+// marker: 1 byte 0x09
+// format: oh dear god
+func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result TypedObject, err error) {
+	if err = AssertMarker(r, decodeMarker, AMF3_OBJECT_MARKER); err != nil {
+		return
+	}
+
+	// decode the initial u29
+	isRef, refVal, err := d.decodeReferenceInt(r)
+	if err != nil {
+		return result, Error("amf3 decode: unable to decode object reference and length: %s", err)
+	}
+
+	// if this is a object reference only, grab it and return it
+	if isRef {
+		objRefId := refVal
+		if objRefId > uint32(len(d.objectRefs)) {
+			return result, Error("amf3 decode: bad object reference for array")
+		}
+
+		res, ok := d.objectRefs[objRefId].(TypedObject)
+		if ok != true {
+			return result, Error("amf3 decode: unable to extract typed object from object references")
+		}
+
+		return res, err
+	}
+
+	// each type has traits that are cached, if the peer sent a reference
+	// then we'll need to look it up and use it.
+	var trait Trait
+	result = *NewTypedObject()
+	traitIsRef := (refVal & 0x01) == 0
+
+	if traitIsRef {
+		traitRef := refVal >> 1
+		if traitRef >= uint32(len(d.traitRefs)) {
+			return result, Error("amf3 decode: bad trait reference for object")
+		}
+
+		trait = d.traitRefs[traitRef]
+	} else {
+		// build a new trait from what's left of the given u29
+		trait = *NewTrait()
+		trait.Externalizable = (refVal & 0x02) != 0
+		trait.Dynamic = (refVal & 0x04) != 0
+
+		trait.Type, err = d.DecodeAmf3String(r, false)
+		if err != nil {
+			return result, Error("amf3 decode: unable to read trait type for object: %s", err)
+		}
+
+		// traits have property keys, encoded as amf3 strings
+		propLength := refVal >> 3
+		for i := uint32(0); i < propLength; i++ {
+			tmp, err := d.DecodeAmf3String(r, false)
+			if err != nil {
+				return result, Error("amf3 decode: unable to read trait property for object: %s", err)
+			}
+			trait.Properties = append(trait.Properties, tmp)
+		}
+
+		d.traitRefs = append(d.traitRefs, trait)
+	}
+
+	d.objectRefs = append(d.objectRefs, result)
+
+	// objects can be externalizable, meaning that the system has no concrete understanding of
+	// their properties or how they are encoded. in that case, we need to find and delegate behavior
+	// to the right object.
+	if trait.Externalizable {
+		return result, Error("amf3 decode: unable to handle externalizable trait")
+	}
+
+	var key string
+	var val interface{}
+
+	// non-externalizable objects have property keys in traits, iterate through them
+	// and add the read values to the object
+	for _, key = range trait.Properties {
+		val, err = d.DecodeAmf3(r)
+		if err != nil {
+			return result, Error("amf3 decode: unable to decode object property: %s", err)
+		}
+
+		result.Object[key] = val
+	}
+
+	// if an object is dynamic, it can have extra key/value data at the end. in this case,
+	// read keys until we get an empty one.
+	if trait.Dynamic {
+		for {
+			key, err = d.DecodeAmf3String(r, false)
+			if err != nil {
+				return result, Error("amf3 decode: unable to decode dynamic key: %s", err)
+			}
+			if key == "" {
+				break
+			}
+			val, err = d.DecodeAmf3(r)
+			if err != nil {
+				return result, Error("amf3 decode: unable to decode dynamic value: %s", err)
+			}
+
+			result.Object[key] = val
+		}
 	}
 
 	return

@@ -52,7 +52,7 @@ type Decoder struct {
 	refCache   []interface{}
 	stringRefs []string
 	objectRefs []interface{}
-	traitRefs  []interface{}
+	traitRefs  []Trait
 }
 
 type Encoder struct {
@@ -67,6 +67,17 @@ type Object map[string]interface{}
 type TypedObject struct {
 	Type   string
 	Object Object
+}
+
+type Trait struct {
+	Type           string
+	Externalizable bool
+	Dynamic        bool
+	Properties     []string
+}
+
+func NewTrait() *Trait {
+	return &Trait{}
 }
 
 func NewTypedObject() *TypedObject {
