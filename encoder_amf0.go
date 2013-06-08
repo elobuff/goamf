@@ -154,7 +154,7 @@ func (e *Encoder) EncodeAmf0Undefined(w io.Writer, encodeMarker bool) (n int, er
 // - normal object format:
 //   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
-func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val EcmaArray, encodeMarker bool) (n int, err error) {
+func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val Object, encodeMarker bool) (n int, err error) {
 	if encodeMarker {
 		if err = WriteMarker(w, AMF0_ECMA_ARRAY_MARKER); err != nil {
 			return
@@ -170,9 +170,7 @@ func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val EcmaArray, encodeMarker b
 	}
 	n += 4
 
-	obj := Object(val)
-
-	m, err = e.EncodeAmf0Object(w, obj, false)
+	m, err = e.EncodeAmf0Object(w, val, false)
 	if err != nil {
 		return n, Error("encode amf0: unable to encode ecma array object: %s", err)
 	}

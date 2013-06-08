@@ -105,7 +105,7 @@ func TestEncodeAmf0EcmaArray(t *testing.T) {
 
 	enc := new(Encoder)
 
-	obj := make(EcmaArray)
+	obj := make(Object)
 	obj["foo"] = "bar"
 
 	_, err := enc.EncodeAmf0EcmaArray(buf, obj, true)

@@ -278,9 +278,9 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok := got.(EcmaArray)
+	obj, ok := got.(Object)
 	if ok != true {
-		t.Errorf("expected result to cast to ecma array")
+		t.Errorf("expected result to cast to object")
 	}
 	if obj["foo"] != "bar" {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
@@ -292,9 +292,9 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok = got.(EcmaArray)
+	obj, ok = got.(Object)
 	if ok != true {
-		t.Errorf("expected result to cast to ecma array")
+		t.Errorf("expected result to cast to object")
 	}
 	if obj["foo"] != "bar" {
 		t.Errorf("expected {'foo'='bar'}, got %v", obj)
@@ -306,7 +306,7 @@ func TestDecodeAmf0EcmaArray(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	obj, ok = got.(EcmaArray)
+	obj, ok = got.(Object)
 	if ok != true {
 		t.Errorf("expected result to cast to ecma array")
 	}

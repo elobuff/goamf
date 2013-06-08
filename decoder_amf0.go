@@ -148,7 +148,7 @@ func (d *Decoder) DecodeAmf0Reference(r io.Reader, decodeMarker bool) (interface
 // - normal object format:
 //   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
-func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, decodeMarker bool) (EcmaArray, error) {
+func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, decodeMarker bool) (Object, error) {
 	if err := AssertMarker(r, decodeMarker, AMF0_ECMA_ARRAY_MARKER); err != nil {
 		return nil, err
 	}
@@ -156,15 +156,9 @@ func (d *Decoder) DecodeAmf0EcmaArray(r io.Reader, decodeMarker bool) (EcmaArray
 	var length uint32
 	err := binary.Read(r, binary.BigEndian, &length)
 
-	obj, err := d.DecodeAmf0Object(r, false)
+	result, err := d.DecodeAmf0Object(r, false)
 	if err != nil {
 		return nil, Error("decode amf0: unable to decode ecma array object: %s", err)
-	}
-
-	result := EcmaArray(obj)
-
-	if int(length) != len(result) {
-		return nil, Error("decode amf0: ecma array has unexpected length %d (expected %d)", len(result), length)
 	}
 
 	return result, nil
