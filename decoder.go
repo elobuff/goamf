@@ -78,17 +78,17 @@ func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 
 	switch marker {
 	case AMF3_UNDEFINED_MARKER:
-		return nil, Error("decode amf3: unsupported type undefined")
+		return d.DecodeAmf3Undefined(r, false)
 	case AMF3_NULL_MARKER:
-		return nil, Error("decode amf3: unsupported type null")
+		return d.DecodeAmf3Null(r, false)
 	case AMF3_FALSE_MARKER:
-		return nil, Error("decode amf3: unsupported type false")
+		return d.DecodeAmf3False(r, false)
 	case AMF3_TRUE_MARKER:
-		return nil, Error("decode amf3: unsupported type true")
+		return d.DecodeAmf3True(r, false)
 	case AMF3_INTEGER_MARKER:
 		return d.DecodeAmf3Integer(r, false)
 	case AMF3_DOUBLE_MARKER:
-		return nil, Error("decode amf3: unsupported type double")
+		return d.DecodeAmf3Double(r, false)
 	case AMF3_STRING_MARKER:
 		return nil, Error("decode amf3: unsupported type string")
 	case AMF3_XMLDOC_MARKER:

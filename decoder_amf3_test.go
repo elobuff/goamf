@@ -28,6 +28,64 @@ var u29TestCases = []u29TestCase{
 	{0x0FFFFFFF, []byte{0xBF, 0xFF, 0xFF, 0xFF}},
 }
 
+func TestDecodeAmf3Undefined(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x00})
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if got != nil {
+		t.Errorf("expect nil got %v", got)
+	}
+}
+
+func TestDecodeAmf3Null(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x01})
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if got != nil {
+		t.Errorf("expect nil got %v", got)
+	}
+}
+
+func TestDecodeAmf3False(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x02})
+	expect := false
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}
+
+func TestDecodeAmf3True(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x03})
+	expect := true
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}
+
 func TestDecodeAmf3Integer(t *testing.T) {
 	dec := new(Decoder)
 
@@ -64,6 +122,21 @@ func TestDecodeAmf3Integer(t *testing.T) {
 
 	buf.Seek(1, 0)
 	got, err = dec.DecodeAmf3Integer(buf, false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}
+
+func TestDecodeAmf3Double(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x05, 0x3f, 0xf3, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33})
+	expect := float64(1.2)
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
 	if err != nil {
 		t.Errorf("%s", err)
 	}
