@@ -148,6 +148,38 @@ func (e *Encoder) EncodeAmf0Undefined(w io.Writer, encodeMarker bool) (n int, er
 	return
 }
 
+// marker: 1 byte 0x08
+// format:
+// - 4 byte big endian uint32 with length of associative array
+// - normal object format:
+//   - loop encoded string followed by encoded value
+//   - terminated with empty string followed by 1 byte 0x09
+func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val EcmaArray, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF0_ECMA_ARRAY_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+	length := uint32(len(val))
+	err = binary.Write(w, binary.BigEndian, length)
+	if err != nil {
+		return n, Error("encode amf0: unable to encode ecma array length: %s", err)
+	}
+
+	obj := Object(val)
+
+	m, err = e.EncodeAmf0Object(w, obj, false)
+	if err != nil {
+		return n, Error("encode amf0: unable to encode ecma array object: %s", err)
+	}
+	n += m
+
+	return
+}
+
 // marker: 1 byte 0x0c
 // format:
 // - 4 byte big endian uint32 header to determine size
