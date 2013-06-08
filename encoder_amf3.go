@@ -38,7 +38,12 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 	case reflect.Float32, reflect.Float64:
 		return e.EncodeAmf3Double(w, float64(v.Float()), true)
 	case reflect.Array, reflect.Slice:
-		return 0, Error("encode amf3: unsupported type array")
+		length := v.Len()
+		arr := make(Array, length)
+		for i := 0; i < length; i++ {
+			arr[i] = v.Index(int(i)).Interface()
+		}
+		return e.EncodeAmf3Array(w, arr, true)
 	case reflect.Map:
 		return 0, Error("encode amf3: unsupported type object")
 	}
@@ -202,6 +207,46 @@ func (e *Encoder) EncodeAmf3String(w io.Writer, val string, encodeMarker bool) (
 
 	if val != "" {
 		e.stringRefs = append(e.stringRefs, val)
+	}
+
+	return
+}
+
+// marker: 1 byte 0x09
+// format:
+// - u29 reference int. if reference, no more data.
+// - string representing associative array if present
+// - n values (length of u29)
+func (e *Encoder) EncodeAmf3Array(w io.Writer, val Array, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF3_ARRAY_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+	length := uint32(len(val))
+	u29 := uint32(length<<1) | 0x01
+
+	m, err = e.EncodeAmf3Integer(w, u29, false)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode u29 for array: %s", err)
+	}
+	n += m
+
+	m, err = e.EncodeAmf3String(w, "", false)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode empty string for array: %s", err)
+	}
+	n += m
+
+	for _, v := range val {
+		m, err := e.EncodeAmf3(w, v)
+		if err != nil {
+			return n, Error("amf3 encode: cannot encode array element: %s", err)
+		}
+		n += m
 	}
 
 	return

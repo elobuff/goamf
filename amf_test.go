@@ -135,3 +135,31 @@ func TestAmf3Boolean(t *testing.T) {
 func TestAmf3Null(t *testing.T) {
 	Compare(nil, 3, "amf3 boolean nil", t)
 }
+
+func TestAmf3Array(t *testing.T) {
+	obj := make(Object)
+	obj["key"] = "val"
+
+	var arr Array
+	arr = append(arr, "amf")
+	arr = append(arr, float64(2))
+	arr = append(arr, -34.95)
+	arr = append(arr, true)
+	arr = append(arr, false)
+
+	res, err := EncodeAndDecode(arr, 3)
+	if err != nil {
+		t.Error("amf3 object: %s", err)
+	}
+
+	result, ok := res.(Array)
+	if ok != true {
+		t.Errorf("amf3 array conversion failed: %+v", res)
+	}
+
+	for i := 0; i < len(arr); i++ {
+		if arr[i] != result[i] {
+			t.Errorf("amf3 array %d comparison failed: %v / %v", i, arr[i], result[i])
+		}
+	}
+}

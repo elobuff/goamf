@@ -130,3 +130,29 @@ func TestEncodeAmf3String(t *testing.T) {
 		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
 	}
 }
+
+func TestEncodeAmf3Array(t *testing.T) {
+	enc := new(Encoder)
+	buf := new(bytes.Buffer)
+	expect := []byte{0x09, 0x13, 0x01,
+		0x06, 0x03, '1',
+		0x06, 0x03, '2',
+		0x06, 0x03, '3',
+		0x06, 0x03, '4',
+		0x06, 0x03, '5',
+		0x06, 0x03, '6',
+		0x06, 0x03, '7',
+		0x06, 0x03, '8',
+		0x06, 0x03, '9',
+	}
+
+	arr := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	_, err := enc.EncodeAmf3(buf, arr)
+	if err != nil {
+		t.Errorf("err: %s", err)
+	}
+
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}

@@ -155,8 +155,9 @@ func (d *Decoder) DecodeAmf3String(r io.Reader, decodeMarker bool) (result strin
 
 // marker: 1 byte 0x09
 // format:
-// - u29 reference int. if reference, no more data. if not reference,
-//   length value of array.
+// - u29 reference int. if reference, no more data.
+// - string representing associative array if present
+// - n values (length of u29)
 func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array, err error) {
 	if err = AssertMarker(r, decodeMarker, AMF3_ARRAY_MARKER); err != nil {
 		return
