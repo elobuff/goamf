@@ -532,7 +532,7 @@ func TestDecodeAmf0TypedObject(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	tobj, ok := got.(*TypedObject)
+	tobj, ok := got.(TypedObject)
 	if ok != true {
 		t.Errorf("expected result to cast to typed object, got %+v", tobj)
 	}
@@ -552,7 +552,7 @@ func TestDecodeAmf0TypedObject(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	tobj, ok = got.(*TypedObject)
+	tobj, ok = got.(TypedObject)
 	if ok != true {
 		t.Errorf("expected result to cast to typed object, got %+v", tobj)
 	}
@@ -572,7 +572,7 @@ func TestDecodeAmf0TypedObject(t *testing.T) {
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	tobj, ok = got.(*TypedObject)
+	tobj, ok = got.(TypedObject)
 	if ok != true {
 		t.Errorf("expected result to cast to typed object, got %+v", tobj)
 	}

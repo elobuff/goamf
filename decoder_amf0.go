@@ -274,8 +274,8 @@ func (d *Decoder) DecodeAmf0XmlDocument(r io.Reader, decodeMarker bool) (result 
 // - normal object format:
 //   - loop encoded string followed by encoded value
 //   - terminated with empty string followed by 1 byte 0x09
-func (d *Decoder) DecodeAmf0TypedObject(r io.Reader, decodeMarker bool) (*TypedObject, error) {
-	result := new(TypedObject)
+func (d *Decoder) DecodeAmf0TypedObject(r io.Reader, decodeMarker bool) (TypedObject, error) {
+	result := *new(TypedObject)
 
 	err := AssertMarker(r, decodeMarker, AMF0_TYPED_OBJECT_MARKER)
 	if err != nil {
