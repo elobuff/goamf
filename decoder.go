@@ -96,7 +96,7 @@ func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 	case AMF3_DATE_MARKER:
 		return nil, Error("decode amf3: unsupported type date")
 	case AMF3_ARRAY_MARKER:
-		return nil, Error("decode amf3: unsupported type array")
+		return d.DecodeAmf3Array(r, false)
 	case AMF3_OBJECT_MARKER:
 		return nil, Error("decode amf3: unsupported type object")
 	case AMF3_XML_MARKER:

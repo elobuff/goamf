@@ -159,3 +159,30 @@ func TestDecodeAmf3String(t *testing.T) {
 		t.Errorf("expect %v got %v", expect, got)
 	}
 }
+
+func TestDecodeAmf3Array(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x09, 0x13, 0x01,
+		0x06, 0x03, '1',
+		0x06, 0x03, '2',
+		0x06, 0x03, '3',
+		0x06, 0x03, '4',
+		0x06, 0x03, '5',
+		0x06, 0x03, '6',
+		0x06, 0x03, '7',
+		0x06, 0x03, '8',
+		0x06, 0x03, '9',
+	})
+
+	dec := new(Decoder)
+	expect := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	got, err := dec.DecodeAmf3Array(buf, true)
+	if err != nil {
+		t.Errorf("err: %s", err)
+	}
+
+	for i, v := range expect {
+		if got[i] != v {
+			t.Error("expected array element %d to be %v, got %v", i, v, got[i])
+		}
+	}
+}
