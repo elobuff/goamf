@@ -118,6 +118,7 @@ func (d *Decoder) DecodeAmf0Undefined(r io.Reader, decodeMarker bool) (result in
 
 // marker: 1 byte 0x07
 // format: 2 byte big endian uint16
+/*
 func (d *Decoder) DecodeAmf0Reference(r io.Reader, decodeMarker bool) (interface{}, error) {
 	if err := AssertMarker(r, decodeMarker, AMF0_REFERENCE_MARKER); err != nil {
 		return nil, err
@@ -139,6 +140,7 @@ func (d *Decoder) DecodeAmf0Reference(r io.Reader, decodeMarker bool) (interface
 
 	return result, nil
 }
+*/
 
 // marker: 1 byte 0x08
 // format:
