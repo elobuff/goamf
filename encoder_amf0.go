@@ -168,6 +168,7 @@ func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val EcmaArray, encodeMarker b
 	if err != nil {
 		return n, Error("encode amf0: unable to encode ecma array length: %s", err)
 	}
+	n += 4
 
 	obj := Object(val)
 
@@ -176,6 +177,37 @@ func (e *Encoder) EncodeAmf0EcmaArray(w io.Writer, val EcmaArray, encodeMarker b
 		return n, Error("encode amf0: unable to encode ecma array object: %s", err)
 	}
 	n += m
+
+	return
+}
+
+// marker: 1 byte 0x0a
+// format:
+// - 4 byte big endian uint32 to determine length of associative array
+// - n (length) encoded values
+func (e *Encoder) EncodeAmf0StrictArray(w io.Writer, val StrictArray, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF0_STRICT_ARRAY_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+	length := uint32(len(val))
+	err = binary.Write(w, binary.BigEndian, length)
+	if err != nil {
+		return n, Error("encode amf0: unable to encode strict array length: %s", err)
+	}
+	n += 4
+
+	for _, v := range val {
+		m, err = e.EncodeAmf0(w, v)
+		if err != nil {
+			return n, Error("encode amf0: unable to encode strict array element: %s", err)
+		}
+		n += m
+	}
 
 	return
 }

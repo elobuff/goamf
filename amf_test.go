@@ -90,6 +90,26 @@ func TestAmf0Object(t *testing.T) {
 	}
 }
 
+func TestAmf0Array(t *testing.T) {
+	arr := [5]float64{1, 2, 3, 4, 5}
+
+	res, err := EncodeAndDecode(arr, 0)
+	if err != nil {
+		t.Error("amf0 object: %s", err)
+	}
+
+	result, ok := res.(StrictArray)
+	if ok != true {
+		t.Errorf("amf0 array conversion failed")
+	}
+
+	for i := 0; i < len(arr); i++ {
+		if arr[i] != result[i] {
+			t.Errorf("amf0 array %d comparison failed: %v / %v", i, arr[i], result[i])
+		}
+	}
+}
+
 func TestAmf3Integer(t *testing.T) {
 	Compare(uint32(0), 3, "amf3 integer zero", t)
 	Compare(uint32(1245), 3, "amf3 integer low", t)

@@ -108,17 +108,35 @@ func TestEncodeAmf0EcmaArray(t *testing.T) {
 	obj := make(EcmaArray)
 	obj["foo"] = "bar"
 
-	n, err := enc.EncodeAmf0EcmaArray(buf, obj, true)
+	_, err := enc.EncodeAmf0EcmaArray(buf, obj, true)
 	if err != nil {
 		t.Errorf("%s", err)
 	}
-	if n != 15 {
-		t.Errorf("expected to write 15 bytes, actual %d", n)
-	}
+
 	if bytes.Compare(buf.Bytes(), expect) != 0 {
 		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
 	}
+}
 
+func TestEncodeAmf0StrictArray(t *testing.T) {
+	buf := new(bytes.Buffer)
+	expect := []byte{0x0a, 0x00, 0x00, 0x00, 0x03, 0x00, 0x40, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x66, 0x6f, 0x6f, 0x05}
+
+	enc := new(Encoder)
+
+	arr := make(StrictArray, 3)
+	arr[0] = float64(5)
+	arr[1] = "foo"
+	arr[2] = nil
+
+	_, err := enc.EncodeAmf0StrictArray(buf, arr, true)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
 }
 
 func TestEncodeAmf0Null(t *testing.T) {

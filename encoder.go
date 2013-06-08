@@ -46,8 +46,15 @@ func (e *Encoder) EncodeAmf0(w io.Writer, val interface{}) (int, error) {
 		return e.EncodeAmf0Number(w, float64(v.Uint()), true)
 	case reflect.Float32, reflect.Float64:
 		return e.EncodeAmf0Number(w, float64(v.Float()), true)
-	case reflect.Array, reflect.Slice:
-		return 0, Error("encode amf0: unsupported type array")
+	case reflect.Array:
+		length := v.Len()
+		arr := make(StrictArray, length)
+		for i := 0; i < length; i++ {
+			arr[i] = v.Index(int(i)).Interface()
+		}
+		return e.EncodeAmf0StrictArray(w, arr, true)
+	case reflect.Slice:
+		return 0, Error("encode amf0: unsupported type slice")
 	case reflect.Map:
 		obj, ok := val.(Object)
 		if ok != true {
