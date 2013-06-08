@@ -3,7 +3,6 @@ package amf
 import (
 	"encoding/binary"
 	"io"
-	"math"
 )
 
 // marker: 1 byte 0x00
@@ -16,16 +15,11 @@ func (e *Encoder) EncodeAmf0Number(w io.Writer, val float64, encodeMarker bool) 
 		n += 1
 	}
 
-	var m int
-	num := math.Float64bits(val)
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, num)
-
-	m, err = w.Write(buf)
+	err = binary.Write(w, binary.BigEndian, &val)
 	if err != nil {
 		return
 	}
-	n += m
+	n += 8
 
 	return
 }
