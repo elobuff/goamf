@@ -123,23 +123,23 @@ func (d *Decoder) DecodeAmf3String(r io.Reader, decodeMarker bool) (result strin
 		return
 	}
 
-	var ref bool
-	var length uint32
-	ref, length, err = d.decodeReferenceInt(r)
+	var isRef bool
+	var refVal uint32
+	isRef, refVal, err = d.decodeReferenceInt(r)
 	if err != nil {
 		return "", Error("amf3 decode: unable to decode string reference and length: %s", err)
 	}
 
-	if ref {
-		if length > uint32(len(d.stringRefs)) {
+	if isRef {
+		if refVal > uint32(len(d.stringRefs)) {
 			return "", Error("amf3 decode: bad string reference")
 		}
 
-		result = d.stringRefs[length]
+		result = d.stringRefs[refVal]
 		return
 	}
 
-	buf := make([]byte, length)
+	buf := make([]byte, refVal)
 	_, err = r.Read(buf)
 	if err != nil {
 		return "", Error("amf3 decode: unable to read string: %s", err)
@@ -163,19 +163,19 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 		return
 	}
 
-	var ref bool
-	var length uint32
-	ref, length, err = d.decodeReferenceInt(r)
+	var isRef bool
+	var refVal uint32
+	isRef, refVal, err = d.decodeReferenceInt(r)
 	if err != nil {
 		return result, Error("amf3 decode: unable to decode array reference and length: %s", err)
 	}
 
-	if ref {
-		if length > uint32(len(d.objectRefs)) {
+	if isRef {
+		if refVal > uint32(len(d.objectRefs)) {
 			return result, Error("amf3 decode: bad object reference for array")
 		}
 
-		res, ok := d.objectRefs[length].(Array)
+		res, ok := d.objectRefs[refVal].(Array)
 		if ok != true {
 			return result, Error("amf3 decode: unable to extract array from object references")
 		}
@@ -204,14 +204,14 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 	return
 }
 
-func (d *Decoder) decodeReferenceInt(r io.Reader) (ref bool, val uint32, err error) {
+func (d *Decoder) decodeReferenceInt(r io.Reader) (isRef bool, refVal uint32, err error) {
 	u29, err := d.DecodeAmf3Integer(r, false)
 	if err != nil {
 		return false, 0, Error("amf3 decode: unable to decode reference int: %s", err)
 	}
 
-	ref = u29&0x01 == 0
-	val = u29 >> 1
+	isRef = u29&0x01 == 0
+	refVal = u29 >> 1
 
 	return
 }
