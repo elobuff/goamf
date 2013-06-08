@@ -114,3 +114,51 @@ func (e *Encoder) EncodeAmf3Double(w io.Writer, val float64, encodeMarker bool) 
 
 	return
 }
+
+// marker: 1 byte 0x06
+// format:
+// - u29 reference int. if reference, no more data. if not reference,
+//   length value of bytes to read to complete string.
+func (e *Encoder) EncodeAmf3String(w io.Writer, val string, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF3_STRING_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+
+	for i, s := range e.stringRefs {
+		if s == val {
+			u29 := uint32(i<<1 | 0x01)
+			m, err = e.EncodeAmf3Integer(w, u29, false)
+			if err != nil {
+				n += m
+			}
+			return
+		}
+	}
+
+	// todo: add
+	length := uint32(len(val))
+	u29 := uint32(length<<1) | 0x01
+
+	m, err = e.EncodeAmf3Integer(w, u29, false)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode u29 for string: %s", err)
+	}
+	n += m
+
+	m, err = w.Write([]byte(val))
+	if err != nil {
+		return n, Error("encode amf3: unable to encode string value: %s", err)
+	}
+	n += m
+
+	if val != "" {
+		e.stringRefs = append(e.stringRefs, val)
+	}
+
+	return
+}

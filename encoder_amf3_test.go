@@ -114,3 +114,19 @@ func TestEncodeAmf3Double(t *testing.T) {
 		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
 	}
 }
+
+func TestEncodeAmf3String(t *testing.T) {
+	enc := new(Encoder)
+
+	buf := new(bytes.Buffer)
+	expect := []byte{0x06, 0x07, 'f', 'o', 'o'}
+
+	_, err := enc.EncodeAmf3(buf, "foo")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}

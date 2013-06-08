@@ -144,3 +144,18 @@ func TestDecodeAmf3Double(t *testing.T) {
 		t.Errorf("expect %v got %v", expect, got)
 	}
 }
+
+func TestDecodeAmf3String(t *testing.T) {
+	buf := bytes.NewReader([]byte{0x06, 0x07, 'f', 'o', 'o'})
+	expect := "foo"
+
+	dec := new(Decoder)
+
+	got, err := dec.DecodeAmf3(buf)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if expect != got {
+		t.Errorf("expect %v got %v", expect, got)
+	}
+}

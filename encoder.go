@@ -6,6 +6,7 @@ import (
 )
 
 type Encoder struct {
+	stringRefs []string
 }
 
 func (e *Encoder) Encode(w io.Writer, val interface{}, ver Version) (int, error) {
@@ -74,7 +75,7 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 
 	switch v.Kind() {
 	case reflect.String:
-		return 0, Error("encode amf3: unsupported type string")
+		return e.EncodeAmf3String(w, v.String(), true)
 	case reflect.Bool:
 		if v.Bool() {
 			return e.EncodeAmf3True(w, true)

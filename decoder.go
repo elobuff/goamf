@@ -7,10 +7,10 @@ import (
 )
 
 type Decoder struct {
-	refCache    []interface{}
-	stringCache []interface{}
-	objectCache []interface{}
-	traitCache  []interface{}
+	refCache   []interface{}
+	stringRefs []string
+	objectRefs []interface{}
+	traitRefs  []interface{}
 }
 
 func (d *Decoder) Decode(r io.Reader, ver Version) (interface{}, error) {
@@ -90,7 +90,7 @@ func (d *Decoder) DecodeAmf3(r io.Reader) (interface{}, error) {
 	case AMF3_DOUBLE_MARKER:
 		return d.DecodeAmf3Double(r, false)
 	case AMF3_STRING_MARKER:
-		return nil, Error("decode amf3: unsupported type string")
+		return d.DecodeAmf3String(r, false)
 	case AMF3_XMLDOC_MARKER:
 		return nil, Error("decode amf3: unsupported type xmldoc")
 	case AMF3_DATE_MARKER:
