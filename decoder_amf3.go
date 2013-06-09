@@ -3,6 +3,7 @@ package amf
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"time"
 )
 
@@ -323,7 +324,16 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result Typed
 	// their properties or how they are encoded. in that case, we need to find and delegate behavior
 	// to the right object.
 	if trait.Externalizable {
-		return result, Error("amf3 decode: unable to handle externalizable trait")
+		switch trait.Type {
+		case "DSK":
+			return d.decodeAmf3ExternalizableDSK(r)
+		case "DSA":
+			return d.decodeAmf3ExternalizableDSA(r)
+		case "flex.messaging.io.ArrayCollection":
+			return d.decodeAmf3ExternalizableArrayCollection(r)
+		default:
+			return d.decodeAmf3ExternalizableOther(r, trait.Type)
+		}
 	}
 
 	var key string
@@ -400,6 +410,159 @@ func (d *Decoder) DecodeAmf3ByteArray(r io.Reader, decodeMarker bool) (result []
 	}
 
 	return
+}
+
+func (d *Decoder) decodeAmf3ExternalizableDSA(r io.Reader) (result TypedObject, err error) {
+	result = *NewTypedObject()
+	result.Type = "DSA"
+
+	if err = d.decodeAmf3ExternalFields(r, &result.Object,
+		[]string{"body", "clientId", "destination", "headers", "messageId", "timeStamp", "timeToLive"},
+		[]string{"clientIdBytes", "messageIdBytes"}); err != nil {
+		return result, Error("unable to decode dsa: %s", err)
+	}
+
+	if err = d.decodeAmf3ExternalFields(r, &result.Object,
+		[]string{"correlationId", "correlationIdBytes"}); err != nil {
+		return result, Error("unable to decode dsa: %s", err)
+	}
+
+	return
+}
+
+func (d *Decoder) decodeAmf3ExternalizableDSK(r io.Reader) (result TypedObject, err error) {
+	result = *NewTypedObject()
+	result.Type = "DSK"
+
+	if err = d.decodeAmf3ExternalFields(r, &result.Object,
+		[]string{"body", "clientId", "destination", "headers", "messageId", "timeStamp", "timeToLive"},
+		[]string{"clientIdBytes", "messageIdBytes"}); err != nil {
+		return result, Error("unable to decode dsa: %s", err)
+	}
+
+	if err = d.decodeAmf3ExternalFields(r, &result.Object,
+		[]string{"correlationId", "correlationIdBytes"}); err != nil {
+		return result, Error("unable to decode dsa: %s", err)
+	}
+
+	var flag uint8
+	var flags []uint8
+	flags, err = d.decodeAmf3ExternalFlags(r)
+	if err != nil {
+		return result, Error("unable to decode remaining DSK flags: %s", err)
+	}
+	for i := uint8(0); i < uint8(len(flags)); i++ {
+		flag = flags[i]
+		err = d.decodeAmf3ExternalRemains(r, flag, 0)
+		if err != nil {
+			return result, Error("unable to decode remaining DSK: %s", err)
+		}
+	}
+
+	return
+}
+
+func (d *Decoder) decodeAmf3ExternalizableArrayCollection(r io.Reader) (result TypedObject, err error) {
+	var obj interface{}
+	obj, err = d.DecodeAmf3(r)
+	if err != nil {
+		return result, Error("amf3 decode: unable to decode array collection typed object element: %s", err)
+	}
+
+	result = *NewTypedObject()
+	result.Type = "flex.messaging.io.ArrayCollection"
+	result.Object["array"] = obj
+
+	return
+}
+
+func (d *Decoder) decodeAmf3ExternalizableOther(r io.Reader, name string) (result TypedObject, err error) {
+	n := 0
+	buf := make([]byte, 4096)
+	n, err = r.Read(buf)
+	if err != nil {
+		return result, Error("unable to read from buffer")
+	}
+
+	DumpBytes(name, buf, n)
+
+	return result, Error("amf3 decode: unable to decode externalizable of type %s", name)
+}
+
+func (d *Decoder) decodeAmf3ExternalFlags(r io.Reader) (result []uint8, err error) {
+	var flag uint8
+	for {
+		err = binary.Read(r, binary.BigEndian, &flag)
+		if err != nil {
+			return result, Error("Unable to read flags")
+		}
+		result = append(result, flag)
+		if flag < 128 {
+			break
+		}
+	}
+
+	return
+}
+
+func (d *Decoder) decodeAmf3ExternalFields(r io.Reader, obj *Object, fieldSets ...[]string) (err error) {
+	var bit uint8
+	var length uint8
+	var flag uint8
+	var flags []uint8
+
+	var field string
+	var fields []string
+
+	flags, err = d.decodeAmf3ExternalFlags(r)
+	if err != nil {
+		return Error("unable to decode flags for fieldsets %s (%s)", fieldSets, err)
+	}
+
+	if len(flags) > len(fieldSets) {
+		return Error("too many flags for fieldsets %+v (%d flags, %d sets)", fieldSets, len(flags), len(fieldSets))
+	}
+
+	for i := 0; i < len(flags); i++ {
+		flag = flags[i]
+		fields = fieldSets[i]
+		length = uint8(len(fields))
+
+		for j := uint8(0); j < length; j++ {
+			field = fields[j]
+			bit = uint8(math.Exp2(float64(j)))
+
+			if (flag & bit) != 0 {
+				tmp, err := d.DecodeAmf3(r)
+				if err != nil {
+					return Error("unable to decode external field %s (%d %d %d): %s", field, i, j, bit, err)
+				}
+				(*obj)[field] = tmp
+			}
+
+			err = d.decodeAmf3ExternalRemains(r, flag, length)
+			if err != nil {
+				return Error("unable to decode external field remains (%d, %d)", flag, length)
+			}
+		}
+	}
+
+	return err
+}
+
+func (d *Decoder) decodeAmf3ExternalRemains(r io.Reader, flag uint8, bits uint8) (err error) {
+	if (flag >> bits) != 0 {
+		for i := bits; i < 6; i++ {
+			if ((flag >> i) & 1) != 0 {
+				_, err := d.DecodeAmf3(r)
+				if err != nil {
+					return Error("unable to decode remaining field %d: %s", i, err)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (d *Decoder) decodeReferenceInt(r io.Reader) (isRef bool, refVal uint32, err error) {
