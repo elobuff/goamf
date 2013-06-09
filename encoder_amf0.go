@@ -301,3 +301,8 @@ func (e *Encoder) EncodeAmf0Unsupported(w io.Writer, encodeMarker bool) (n int, 
 
 	return
 }
+
+// marker: 1 byte 0x11
+func (e *Encoder) EncodeAmf0Amf3Marker(w io.Writer) error {
+	return WriteMarker(w, AMF0_ACMPLUS_OBJECT_MARKER)
+}
