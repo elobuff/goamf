@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"sort"
+	"time"
 )
 
 // amf3 polymorphic router
@@ -65,6 +66,10 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 		to.Object = obj
 
 		return e.EncodeAmf3Object(w, to, true)
+	}
+
+	if tm, ok := val.(time.Time); ok {
+		return e.EncodeAmf3Date(w, tm, true)
 	}
 
 	if to, ok := val.(TypedObject); ok {
@@ -197,6 +202,33 @@ func (e *Encoder) EncodeAmf3String(w io.Writer, val string, encodeMarker bool) (
 	if val != "" {
 		e.stringRefs = append(e.stringRefs, val)
 	}
+
+	return
+}
+
+// marker: 1 byte 0x08
+// format:
+// - u29 reference int, if reference, no more data
+// - timestamp double
+func (e *Encoder) EncodeAmf3Date(w io.Writer, val time.Time, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF3_DATE_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	if err = WriteMarker(w, 0x01); err != nil {
+		return n, Error("amf3 encode: cannot encode u29 for array: %s", err)
+	}
+	n += 1
+
+	u64 := val.Unix()
+	err = binary.Write(w, binary.BigEndian, &u64)
+	if err != nil {
+		return n, Error("amf3 encode: unable to write date double: %s", err)
+	}
+	n += 8
 
 	return
 }
@@ -370,6 +402,51 @@ func (e *Encoder) EncodeAmf3Object(w io.Writer, val TypedObject, encodeMarker bo
 			n += m
 		}
 	}
+
+	return
+}
+
+// marker: 1 byte 0x0c
+// format:
+// - u29 reference int. if reference, no more data. if not reference,
+//   length value of bytes to read .
+func (e *Encoder) EncodeAmf3ByteArray(w io.Writer, val []byte, encodeMarker bool) (n int, err error) {
+	if encodeMarker {
+		if err = WriteMarker(w, AMF3_BYTEARRAY_MARKER); err != nil {
+			return
+		}
+		n += 1
+	}
+
+	var m int
+
+	for i, o := range e.objectRefs {
+		if reflect.DeepEqual(o, val) {
+			u29 := uint32(i<<1 | 0x01)
+			m, err = e.encodeAmf3Uint29(w, u29)
+			if err != nil {
+				n += m
+			}
+			return
+		}
+	}
+
+	length := uint32(len(val))
+	u29 := (length << 1) | 1
+
+	m, err = e.encodeAmf3Uint29(w, u29)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode u29 for bytearray: %s", err)
+	}
+	n += m
+
+	m, err = w.Write(val)
+	if err != nil {
+		return n, Error("encode amf3: unable to encode bytearray value: %s", err)
+	}
+	n += m
+
+	e.objectRefs = append(e.objectRefs, val)
 
 	return
 }

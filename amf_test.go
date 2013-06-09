@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
+	"time"
 )
 
 func EncodeAndDecode(val interface{}, ver Version) (result interface{}, err error) {
@@ -31,9 +33,20 @@ func Compare(val interface{}, ver Version, name string, t *testing.T) {
 	if err != nil {
 		t.Errorf("%s: %s", name, err)
 	}
-	if val != result {
-		t.Errorf("%s: comparison failed between %+v and %+v", name, val, result)
+
+	if !reflect.DeepEqual(val, result) {
+		val_v := reflect.ValueOf(val)
+		result_v := reflect.ValueOf(result)
+
+		t.Errorf("%s: comparison failed between %+v (%s) and %+v (%s)", name, val, val_v.Type(), result, result_v.Type())
+
+		Dump("expected", val)
+		Dump("got", result)
 	}
+
+	// if val != result {
+	// 	t.Errorf("%s: comparison failed between %+v and %+v", name, val, result)
+	// }
 }
 
 func TestAmf0Number(t *testing.T) {
@@ -136,6 +149,14 @@ func TestAmf3Null(t *testing.T) {
 	Compare(nil, 3, "amf3 boolean nil", t)
 }
 
+func TestAmf3Date(t *testing.T) {
+	t1 := time.Unix(time.Now().Unix(), 0) // nanoseconds discarded
+	t2, _ := time.Parse(time.RFC822, "04 Sep 83 12:04 EST")
+
+	Compare(t1, 3, "amf3 date now", t)
+	Compare(t2, 3, "amf3 date earlier", t)
+}
+
 func TestAmf3Array(t *testing.T) {
 	obj := make(Object)
 	obj["key"] = "val"
@@ -161,5 +182,25 @@ func TestAmf3Array(t *testing.T) {
 		if arr[i] != result[i] {
 			t.Errorf("amf3 array %d comparison failed: %v / %v", i, arr[i], result[i])
 		}
+	}
+}
+
+func TestAmf3ByteArray(t *testing.T) {
+	enc := new(Encoder)
+	dec := new(Decoder)
+
+	buf := new(bytes.Buffer)
+
+	expect := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x00}
+
+	enc.EncodeAmf3ByteArray(buf, expect, true)
+
+	result, err := dec.DecodeAmf3ByteArray(buf, true)
+	if err != nil {
+		t.Errorf("err: %s", err)
+	}
+
+	if bytes.Compare(result, expect) != 0 {
+		t.Errorf("expected: %+v, got %+v", expect, buf)
 	}
 }
