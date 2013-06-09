@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestEncodeAmf3EmptyString(t *testing.T) {
+	enc := new(Encoder)
+
+	buf := new(bytes.Buffer)
+	expect := []byte{0x01}
+
+	_, err := enc.EncodeAmf3String(buf, "", false)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	if bytes.Compare(buf.Bytes(), expect) != 0 {
+		t.Errorf("expected buffer: %+v, got: %+v", expect, buf.Bytes())
+	}
+}
+
 func TestEncodeAmf3Undefined(t *testing.T) {
 	enc := new(Encoder)
 
