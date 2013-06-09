@@ -245,16 +245,20 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result Typed
 		}
 
 		trait = d.traitRefs[traitRef]
+
 	} else {
 		// build a new trait from what's left of the given u29
 		trait = *NewTrait()
 		trait.Externalizable = (refVal & 0x02) != 0
 		trait.Dynamic = (refVal & 0x04) != 0
 
-		trait.Type, err = d.DecodeAmf3String(r, false)
+		var cls string
+		cls, err = d.DecodeAmf3String(r, false)
 		if err != nil {
 			return result, Error("amf3 decode: unable to read trait type for object: %s", err)
 		}
+		result.Type = cls
+		trait.Type = cls
 
 		// traits have property keys, encoded as amf3 strings
 		propLength := refVal >> 3
