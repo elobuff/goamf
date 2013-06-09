@@ -151,7 +151,7 @@ func TestAmf3Null(t *testing.T) {
 
 func TestAmf3Date(t *testing.T) {
 	t1 := time.Unix(time.Now().Unix(), 0) // nanoseconds discarded
-	t2, _ := time.Parse(time.RFC822, "04 Sep 83 12:04 EST")
+	t2 := time.Date(1983, 9, 4, 12, 4, 8, 0, time.Local)
 
 	Compare(t1, 3, "amf3 date now", t)
 	Compare(t2, 3, "amf3 date earlier", t)
