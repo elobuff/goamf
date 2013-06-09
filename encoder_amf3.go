@@ -29,9 +29,19 @@ func (e *Encoder) EncodeAmf3(w io.Writer, val interface{}) (int, error) {
 			return e.EncodeAmf3False(w, true)
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-		return e.EncodeAmf3Integer(w, uint32(v.Int()), true)
+		n := v.Int()
+		if n >= 0 && n <= AMF3_INTEGER_MAX {
+			return e.EncodeAmf3Integer(w, uint32(n), true)
+		} else {
+			return e.EncodeAmf3Double(w, float64(n), true)
+		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
-		return e.EncodeAmf3Integer(w, uint32(v.Uint()), true)
+		n := v.Uint()
+		if n <= AMF3_INTEGER_MAX {
+			return e.EncodeAmf3Integer(w, uint32(n), true)
+		} else {
+			return e.EncodeAmf3Double(w, float64(n), true)
+		}
 	case reflect.Int64:
 		return e.EncodeAmf3Double(w, float64(v.Int()), true)
 	case reflect.Uint64:
@@ -153,7 +163,7 @@ func (e *Encoder) EncodeAmf3Integer(w io.Writer, val uint32, encodeMarker bool) 
 		return
 	}
 
-	return n, Error("amf3 encode: cannot encode u29 (out of range)")
+	return n, Error("amf3 encode: cannot encode u29 with value %d (out of range)", val)
 }
 
 // marker: 1 byte 0x05
