@@ -182,26 +182,11 @@ func (e *Encoder) EncodeAmf3String(w io.Writer, val string, encodeMarker bool) (
 
 	var m int
 
-	for i, s := range e.stringRefs {
-		if s == val {
-			u29 := uint32(i<<1 | 0x01)
-			m, err = e.encodeAmf3Uint29(w, u29)
-			if err != nil {
-				n += m
-			}
-			return
-		}
-	}
-
 	m, err = e.encodeAmf3Utf8(w, val)
 	if err != nil {
 		return
 	}
 	n += m
-
-	if val != "" {
-		e.stringRefs = append(e.stringRefs, val)
-	}
 
 	return
 }
