@@ -214,11 +214,13 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 	}
 
 	if isRef {
-		if refVal > uint32(len(d.objectRefs)) {
+		objRefId := refVal >> 1
+
+		if objRefId > uint32(len(d.objectRefs)) {
 			return result, Error("amf3 decode: bad object reference for array")
 		}
 
-		res, ok := d.objectRefs[refVal].(Array)
+		res, ok := d.objectRefs[objRefId].(Array)
 		if ok != true {
 			return result, Error("amf3 decode: unable to extract array from object references")
 		}
@@ -264,9 +266,10 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 
 	// if this is a object reference only, grab it and return it
 	if isRef {
-		objRefId := refVal
+		objRefId := refVal >> 1
+
 		if objRefId > uint32(len(d.objectRefs)) {
-			return nil, Error("amf3 decode: bad object reference for array")
+			return nil, Error("amf3 decode: bad object reference for object")
 		}
 
 		return d.objectRefs[objRefId], nil
