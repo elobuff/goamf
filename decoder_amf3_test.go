@@ -201,16 +201,16 @@ func TestDecodeAmf3Object(t *testing.T) {
 		t.Errorf("err: %s", err)
 	}
 
-	to, ok := got.(TypedObject)
+	to, ok := got.(Object)
 	if ok != true {
 		t.Error("unable to cast object as typed object")
 	}
 
-	if to.Object["foo"] != "bar" {
-		t.Error("expected foo to be bar, got: %+v", to.Object["foo"])
+	if to["foo"] != "bar" {
+		t.Error("expected foo to be bar, got: %+v", to["foo"])
 	}
 
-	if to.Object["baz"] != nil {
-		t.Error("expected baz to be nil, got: %+v", to.Object["baz"])
+	if to["baz"] != nil {
+		t.Error("expected baz to be nil, got: %+v", to["baz"])
 	}
 }

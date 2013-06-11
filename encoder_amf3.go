@@ -208,7 +208,7 @@ func (e *Encoder) EncodeAmf3Date(w io.Writer, val time.Time, encodeMarker bool) 
 	}
 	n += 1
 
-	u64 := val.Unix()
+	u64 := float64(val.Unix()) * 1000.0
 	err = binary.Write(w, binary.BigEndian, &u64)
 	if err != nil {
 		return n, Error("amf3 encode: unable to write date double: %s", err)
