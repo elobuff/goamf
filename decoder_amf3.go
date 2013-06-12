@@ -189,7 +189,7 @@ func (d *Decoder) DecodeAmf3Date(r io.Reader, decodeMarker bool) (result time.Ti
 		return result, Error("amf3 decode: unable to read double: %s", err)
 	}
 
-	result = time.Unix(int64(u64/1000), 0)
+	result = time.Unix(int64(u64/1000), 0).UTC()
 
 	d.objectRefs = append(d.objectRefs, result)
 
