@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-var log logger.Logger = *logger.NewLogger(logger.LOG_LEVEL_DEBUG, "amf")
+var log logger.Logger = *logger.NewLogger(logger.LOG_LEVEL_WARN, "amf")
 
 func DumpBytes(label string, buf []byte, size int) {
 	fmt.Printf("Dumping %s (%d bytes):\n", label, size)
