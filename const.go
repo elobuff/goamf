@@ -1,5 +1,9 @@
 package amf
 
+import (
+	"io"
+)
+
 const (
 	AMF0 = 0x00
 	AMF3 = 0x03
@@ -49,11 +53,24 @@ const (
 	AMF3_BYTEARRAY_MARKER = 0x0c
 )
 
+type ExternalHandler func(*Decoder, io.Reader) (interface{}, error)
+
 type Decoder struct {
-	refCache   []interface{}
-	stringRefs []string
-	objectRefs []interface{}
-	traitRefs  []Trait
+	refCache         []interface{}
+	stringRefs       []string
+	objectRefs       []interface{}
+	traitRefs        []Trait
+	externalHandlers map[string]ExternalHandler
+}
+
+func NewDecoder() *Decoder {
+	return &Decoder{
+		externalHandlers: make(map[string]ExternalHandler),
+	}
+}
+
+func (d *Decoder) RegisterExternalHandler(name string, f ExternalHandler) {
+	d.externalHandlers[name] = f
 }
 
 type Encoder struct {

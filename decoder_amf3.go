@@ -344,7 +344,17 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 			}
 			return tmp, nil
 		default:
-			return result, Error("amf3 decode: unable to decode external type %s", trait.Type)
+			fn, ok := d.externalHandlers[trait.Type]
+			if ok {
+				var tmp interface{}
+				tmp, err = fn(d, r)
+				if err != nil {
+					return result, Error("amf3 decode: unable to call external decoder for type %s: %s", trait.Type, err)
+				}
+				return tmp, nil
+			} else {
+				return result, Error("amf3 decode: unable to decode external type %s, no handler", trait.Type)
+			}
 		}
 	}
 
