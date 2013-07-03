@@ -191,7 +191,7 @@ func (d *Decoder) DecodeAmf3Date(r io.Reader, decodeMarker bool) (result time.Ti
 
 	result = time.Unix(int64(u64/1000), 0).UTC()
 
-	d.objectRefs = append(d.objectRefs, &result)
+	d.objectRefs = append(d.objectRefs, result)
 
 	return
 }
@@ -246,7 +246,7 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 		result = append(result, tmp)
 	}
 
-	d.objectRefs = append(d.objectRefs, &result)
+	d.objectRefs = append(d.objectRefs, result)
 
 	return
 }
@@ -315,7 +315,7 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result inter
 		d.traitRefs = append(d.traitRefs, trait)
 	}
 
-	d.objectRefs = append(d.objectRefs, &result)
+	d.objectRefs = append(d.objectRefs, result)
 
 	// objects can be externalizable, meaning that the system has no concrete understanding of
 	// their properties or how they are encoded. in that case, we need to find and delegate behavior
@@ -339,7 +339,7 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result inter
 			}
 
 			// store an extra reference to array collection container
-			d.objectRefs = append(d.objectRefs, &result)
+			d.objectRefs = append(d.objectRefs, result)
 
 		default:
 			fn, ok := d.externalHandlers[trait.Type]
@@ -488,7 +488,7 @@ func (d *Decoder) DecodeAmf3ByteArray(r io.Reader, decodeMarker bool) (result []
 		return result, Error("amf3 decode: unable to read bytearray: %s", err)
 	}
 
-	d.objectRefs = append(d.objectRefs, &result)
+	d.objectRefs = append(d.objectRefs, result)
 
 	return
 }
