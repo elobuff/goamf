@@ -253,9 +253,7 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 
 // marker: 1 byte 0x09
 // format: oh dear god
-func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{}, error) {
-	var err error
-
+func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result interface{}, err error) {
 	if err = AssertMarker(r, decodeMarker, AMF3_OBJECT_MARKER); err != nil {
 		return nil, err
 	}
@@ -280,9 +278,6 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 	// each type has traits that are cached, if the peer sent a reference
 	// then we'll need to look it up and use it.
 	var trait Trait
-	var result Object
-
-	result = make(Object)
 
 	traitIsRef := (refVal & 0x01) == 0
 
@@ -320,12 +315,11 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 		d.traitRefs = append(d.traitRefs, trait)
 	}
 
+	d.objectRefs = append(d.objectRefs, &result)
+
 	// objects can be externalizable, meaning that the system has no concrete understanding of
 	// their properties or how they are encoded. in that case, we need to find and delegate behavior
 	// to the right object.
-
-	d.objectRefs = append(d.objectRefs, &result)
-
 	if trait.Externalizable {
 		switch trait.Type {
 		case "DSA": // AsyncMessageExt
@@ -339,31 +333,34 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 				return result, Error("amf3 decode: unable to decode dsk: %s", err)
 			}
 		case "flex.messaging.io.ArrayCollection":
-			var tmp interface{}
-			tmp, err = d.decodeArrayCollection(r)
+			result, err = d.decodeArrayCollection(r)
 			if err != nil {
 				return result, Error("amf3 decode: unable to decode ac: %s", err)
 			}
-			return tmp, nil
+
+			// store an extra reference to array collection container
+			d.objectRefs = append(d.objectRefs, &result)
+
 		default:
 			fn, ok := d.externalHandlers[trait.Type]
 			if ok {
-				var tmp interface{}
-				tmp, err = fn(d, r)
+				result, err = fn(d, r)
 				if err != nil {
 					return result, Error("amf3 decode: unable to call external decoder for type %s: %s", trait.Type, err)
 				}
-				return tmp, nil
 			} else {
 				return result, Error("amf3 decode: unable to decode external type %s, no handler", trait.Type)
 			}
 		}
-	}
 
-	// result["_type"] = trait.Type
+		return result, err
+	}
 
 	var key string
 	var val interface{}
+	var obj Object
+
+	obj = make(Object)
 
 	// non-externalizable objects have property keys in traits, iterate through them
 	// and add the read values to the object
@@ -373,7 +370,7 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 			return result, Error("amf3 decode: unable to decode object property: %s", err)
 		}
 
-		result[key] = val
+		obj[key] = val
 	}
 
 	// if an object is dynamic, it can have extra key/value data at the end. in this case,
@@ -392,11 +389,13 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (interface{},
 				return result, Error("amf3 decode: unable to decode dynamic value: %s", err)
 			}
 
-			result[key] = val
+			obj[key] = val
 		}
 	}
 
-	return result, err
+	result = obj
+
+	return
 }
 
 // marker: 1 byte 0x07 or 0x0b
