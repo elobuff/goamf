@@ -74,10 +74,6 @@ func (d *Decoder) RegisterExternalHandler(name string, f ExternalHandler) {
 }
 
 type Encoder struct {
-	refCache   []interface{}
-	stringRefs []string
-	objectRefs []interface{}
-	traitRefs  []Trait
 }
 
 type Version uint8

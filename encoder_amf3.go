@@ -268,79 +268,48 @@ func (e *Encoder) EncodeAmf3Object(w io.Writer, val TypedObject, encodeMarker bo
 		n += 1
 	}
 
-	var m int
+	m := 0
 
-	for i, o := range e.objectRefs {
-		if reflect.DeepEqual(o, val) {
-			u29 := uint32(i<<1 | 0x01)
-			m, err = e.encodeAmf3Uint29(w, u29)
-			if err != nil {
-				n += m
-			}
-			return
-		}
+	trait := *NewTrait()
+	trait.Type = val.Type
+	trait.Dynamic = false
+	trait.Externalizable = false
+
+	for k, _ := range val.Object {
+		trait.Properties = append(trait.Properties, k)
 	}
 
-	var trait Trait
-	var foundTrait bool
+	sort.Strings(trait.Properties)
 
-	for i, t := range e.traitRefs {
-		if t.Type == val.Type {
-			trait = t
-			foundTrait = true
-			u29 := uint32(i<<2 | 0x01)
-			m, err = e.encodeAmf3Uint29(w, u29)
-			if err != nil {
-				return n, Error("amf3 encode: cannot encode trait reference for object: %s", err)
-			}
-			n += m
-
-			log.Debug("amf3 enc obj found existing trait: %v", trait)
-		}
+	var u29 uint32 = 0x03
+	if trait.Dynamic {
+		u29 |= 0x02 << 2
 	}
 
-	if !foundTrait {
-		trait = *NewTrait()
-		trait.Type = val.Type
-		trait.Dynamic = false
-		trait.Externalizable = false
+	if trait.Externalizable {
+		u29 |= 0x01 << 2
+	}
 
-		for k, _ := range val.Object {
-			trait.Properties = append(trait.Properties, k)
-		}
+	u29 |= uint32(len(trait.Properties)) << 4
 
-		sort.Strings(trait.Properties)
+	m, err = e.encodeAmf3Uint29(w, u29)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode trait header for object: %s", err)
+	}
+	n += m
 
-		var u29 uint32 = 0x03
-		if trait.Dynamic {
-			u29 |= 0x02 << 2
-		}
+	m, err = e.encodeAmf3Utf8(w, trait.Type)
+	if err != nil {
+		return n, Error("amf3 encode: cannot encode trait type for object: %s", err)
+	}
+	n += m
 
-		if trait.Externalizable {
-			u29 |= 0x01 << 2
-		}
-
-		u29 |= uint32(len(trait.Properties)) << 4
-
-		m, err = e.encodeAmf3Uint29(w, u29)
+	for _, prop := range trait.Properties {
+		m, err = e.encodeAmf3Utf8(w, prop)
 		if err != nil {
-			return n, Error("amf3 encode: cannot encode trait header for object: %s", err)
+			return n, Error("amf3 encode: cannot encode trait property for object: %s", err)
 		}
 		n += m
-
-		m, err = e.encodeAmf3Utf8(w, trait.Type)
-		if err != nil {
-			return n, Error("amf3 encode: cannot encode trait type for object: %s", err)
-		}
-		n += m
-
-		for _, prop := range trait.Properties {
-			m, err = e.encodeAmf3Utf8(w, prop)
-			if err != nil {
-				return n, Error("amf3 encode: cannot encode trait property for object: %s", err)
-			}
-			n += m
-		}
 	}
 
 	if trait.Externalizable {
@@ -348,8 +317,7 @@ func (e *Encoder) EncodeAmf3Object(w io.Writer, val TypedObject, encodeMarker bo
 	}
 
 	for _, prop := range trait.Properties {
-		tmp := val.Object[prop]
-		m, err = e.EncodeAmf3(w, tmp)
+		m, err = e.EncodeAmf3(w, val.Object[prop])
 		if err != nil {
 			return n, Error("amf3 encode: cannot encode sealed object value: %s", err)
 		}
@@ -405,17 +373,6 @@ func (e *Encoder) EncodeAmf3ByteArray(w io.Writer, val []byte, encodeMarker bool
 
 	var m int
 
-	for i, o := range e.objectRefs {
-		if reflect.DeepEqual(o, val) {
-			u29 := uint32(i<<1 | 0x01)
-			m, err = e.encodeAmf3Uint29(w, u29)
-			if err != nil {
-				n += m
-			}
-			return
-		}
-	}
-
 	length := uint32(len(val))
 	u29 := (length << 1) | 1
 
@@ -430,8 +387,6 @@ func (e *Encoder) EncodeAmf3ByteArray(w io.Writer, val []byte, encodeMarker bool
 		return n, Error("encode amf3: unable to encode bytearray value: %s", err)
 	}
 	n += m
-
-	e.objectRefs = append(e.objectRefs, val)
 
 	return
 }
