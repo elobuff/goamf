@@ -124,9 +124,9 @@ func TestAmf0Array(t *testing.T) {
 }
 
 func TestAmf3Integer(t *testing.T) {
-	Compare(uint32(0), 3, "amf3 integer zero", t)
-	Compare(uint32(1245), 3, "amf3 integer low", t)
-	Compare(uint32(123456), 3, "amf3 integer high", t)
+	Compare(int32(0), 3, "amf3 integer zero", t)
+	Compare(int32(1245), 3, "amf3 integer low", t)
+	Compare(int32(123456), 3, "amf3 integer high", t)
 }
 
 func TestAmf3Double(t *testing.T) {

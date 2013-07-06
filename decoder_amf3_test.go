@@ -86,12 +86,12 @@ func TestDecodeAmf3True(t *testing.T) {
 	}
 }
 
-func TestDecodeAmf3Integer(t *testing.T) {
+func TestDecodeU29(t *testing.T) {
 	dec := new(Decoder)
 
 	for _, tc := range u29TestCases {
 		buf := bytes.NewBuffer(tc.expect)
-		n, err := dec.DecodeAmf3Integer(buf, false)
+		n, err := dec.decodeU29(buf)
 		if err != nil {
 			t.Errorf("DecodeAmf3Integer error: %s", err)
 		}
@@ -99,9 +99,13 @@ func TestDecodeAmf3Integer(t *testing.T) {
 			t.Errorf("DecodeAmf3Integer expect n %x got %x", tc.value, n)
 		}
 	}
+}
+
+func TestDecodeAmf3Integer(t *testing.T) {
+	dec := new(Decoder)
 
 	buf := bytes.NewReader([]byte{0x04, 0xFF, 0xFF, 0x7F})
-	expect := uint32(2097151)
+	expect := int32(2097151)
 
 	got, err := dec.DecodeAmf3(buf)
 	if err != nil {

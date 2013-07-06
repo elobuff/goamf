@@ -76,29 +76,23 @@ func (d *Decoder) DecodeAmf3True(r io.Reader, decodeMarker bool) (result bool, e
 }
 
 // marker: 1 byte 0x04
-func (d *Decoder) DecodeAmf3Integer(r io.Reader, decodeMarker bool) (result uint32, err error) {
+func (d *Decoder) DecodeAmf3Integer(r io.Reader, decodeMarker bool) (result int32, err error) {
 	if err = AssertMarker(r, decodeMarker, AMF3_INTEGER_MARKER); err != nil {
 		return
 	}
 
-	var b byte
-
-	for i := 0; i < 3; i++ {
-		b, err = ReadByte(r)
-		if err != nil {
-			return
-		}
-		result = (result << 7) + uint32(b&0x7F)
-		if (b & 0x80) == 0 {
-			return
-		}
-	}
-	b, err = ReadByte(r)
+	var u29 uint32
+	u29, err = d.decodeU29(r)
 	if err != nil {
 		return
 	}
 
-	return ((result << 8) + uint32(b)), nil
+	result = int32(u29)
+	if result > 0xfffffff {
+		result = int32(u29 - 0x20000000)
+	}
+
+	return
 }
 
 // marker: 1 byte 0x05
@@ -132,10 +126,6 @@ func (d *Decoder) DecodeAmf3String(r io.Reader, decodeMarker bool) (result strin
 	}
 
 	if isRef {
-		if refVal > uint32(len(d.stringRefs)) {
-			return "", Error("amf3 decode: bad string reference")
-		}
-
 		result = d.stringRefs[refVal]
 		return
 	}
@@ -171,10 +161,6 @@ func (d *Decoder) DecodeAmf3Date(r io.Reader, decodeMarker bool) (result time.Ti
 	}
 
 	if isRef {
-		if refVal > uint32(len(d.objectRefs)) {
-			return result, Error("amf3 decode: bad object reference for date")
-		}
-
 		res, ok := d.objectRefs[refVal].(time.Time)
 		if ok != true {
 			return result, Error("amf3 decode: unable to extract time from date object references")
@@ -215,10 +201,6 @@ func (d *Decoder) DecodeAmf3Array(r io.Reader, decodeMarker bool) (result Array,
 
 	if isRef {
 		objRefId := refVal >> 1
-
-		if objRefId > uint32(len(d.objectRefs)) {
-			return result, Error("amf3 decode: bad object reference for array")
-		}
 
 		res, ok := d.objectRefs[objRefId].(Array)
 		if ok != true {
@@ -268,10 +250,6 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result inter
 	if isRef {
 		objRefId := refVal >> 1
 
-		if objRefId > uint32(len(d.objectRefs)) {
-			return nil, Error("amf3 decode: bad object reference for object")
-		}
-
 		return d.objectRefs[objRefId], nil
 	}
 
@@ -283,10 +261,6 @@ func (d *Decoder) DecodeAmf3Object(r io.Reader, decodeMarker bool) (result inter
 
 	if traitIsRef {
 		traitRef := refVal >> 1
-		if traitRef >= uint32(len(d.traitRefs)) {
-			return result, Error("amf3 decode: bad trait reference for object")
-		}
-
 		trait = d.traitRefs[traitRef]
 
 	} else {
@@ -423,10 +397,6 @@ func (d *Decoder) DecodeAmf3Xml(r io.Reader, decodeMarker bool) (result string, 
 	}
 
 	if isRef {
-		if refVal > uint32(len(d.objectRefs)) {
-			return "", Error("amf3 decode: bad object reference for xml")
-		}
-
 		var ok bool
 		buf := d.objectRefs[refVal]
 		result, ok = buf.(string)
@@ -469,10 +439,6 @@ func (d *Decoder) DecodeAmf3ByteArray(r io.Reader, decodeMarker bool) (result []
 	}
 
 	if isRef {
-		if refVal > uint32(len(d.objectRefs)) {
-			return result, Error("amf3 decode: bad object reference for byte array")
-		}
-
 		var ok bool
 		result, ok = d.objectRefs[refVal].([]byte)
 		if ok != true {
@@ -493,8 +459,32 @@ func (d *Decoder) DecodeAmf3ByteArray(r io.Reader, decodeMarker bool) (result []
 	return
 }
 
+func (d *Decoder) decodeU29(r io.Reader) (result uint32, err error) {
+	var b byte
+
+	for i := 0; i < 3; i++ {
+		b, err = ReadByte(r)
+		if err != nil {
+			return
+		}
+		result = (result << 7) + uint32(b&0x7F)
+		if (b & 0x80) == 0 {
+			return
+		}
+	}
+
+	b, err = ReadByte(r)
+	if err != nil {
+		return
+	}
+
+	result = ((result << 8) + uint32(b))
+
+	return
+}
+
 func (d *Decoder) decodeReferenceInt(r io.Reader) (isRef bool, refVal uint32, err error) {
-	u29, err := d.DecodeAmf3Integer(r, false)
+	u29, err := d.decodeU29(r)
 	if err != nil {
 		return false, 0, Error("amf3 decode: unable to decode reference int: %s", err)
 	}
