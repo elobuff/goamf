@@ -1,6 +1,0 @@
-machine:
-  timezone:
-    Etc/UTC
-  environment:
-    ENV: test
-    GOPATH: /home/ubuntu
